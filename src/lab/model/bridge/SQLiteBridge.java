@@ -1,5 +1,5 @@
-package lab.bridge;
-import lab.TaskInfo;
+package lab.model.bridge;
+import lab.*;
 import java.io.File;
 import com.almworks.sqlite4java.*;
 import java.util.Date;
@@ -15,23 +15,22 @@ public class SQLiteBridge implements Bridge{
             db.open(true);
             queue = new SQLiteQueue(new File("default.ndb"));
             queue.start();
-            exec("CREATE TABLE tasks (id INTEGER, name TEXT, info TEXT, file TEXT, data INTEGER);COMMIT");
-        } catch (SQLiteException ex){
             queue.execute(new SQLiteJob<Object>() {
                 protected Object job(SQLiteConnection connection) 
                         throws SQLiteException {
-                    connection.exec("CREATE TABLE tasks (id INTEGER, name TEXT, info TEXT, file TEXT, data INTEGER);COMMIT");
+                    connection.exec("BEGIN TRANSACTION;CREATE TABLE tasks (id INTEGER, name TEXT, info TEXT, file TEXT, data INTEGER);COMMIT");
                     return null;
-                }
-                
+                }                
             });
+        } catch (SQLiteException ex){
+           
         }
     }
     /**
      * Add task
      */
     public void addTask(TaskInfo task){
-        StringBuffer sb = new StringBuffer("INSERT INTO tasks VALUES('");
+        StringBuffer sb = new StringBuffer("BEGIN TRANSACTION;INSERT INTO tasks VALUES('");
         sb.append(task.getID());
         sb.append("','");
         sb.append(task.getName());
@@ -47,7 +46,7 @@ public class SQLiteBridge implements Bridge{
         sb.append(task.getDate().getTime());
         sb.append("');COMMIT;");
         final String command = sb.toString();
-        exec(command);
+        execs(command);
     }
     /**
     *    return SQLiteBridge object.
@@ -58,37 +57,29 @@ public class SQLiteBridge implements Bridge{
     /**
     * execute SQL commands
     */
-    private boolean exec(final String str){
-        try{
-            st = db.prepare(str);
-            st.stepThrough();
-            st.dispose();
-            return true;
-        } catch (SQLiteException ex){
-            queue.execute(new SQLiteJob<Object>() {
-                protected Object job(SQLiteConnection connection) 
-                        throws SQLiteException {
-                    connection.exec(str);
-                    return null;
-                }
-                
-            });
-            return true;
-        }
+    private boolean execs(final String str){
+        queue.execute(new SQLiteJob<Object>() {
+            protected Object job(SQLiteConnection connection) 
+                    throws SQLiteException {
+                connection.exec(str);
+                return null;
+            }
+        });
+        return true;
     }
      /**
      * Remove All task..
      */
     public void removeAll() {
-        exec("DELETE * FROM tasks;COMMIT;");
+        execs("BEGIN TRANSACTION;DELETE * FROM tasks;COMMIT;");
     }
      /**
      * Remove task.
      * @param id remove task.
      */
     public void removeTask(int id) {
-        String command = "DELETE FROM tasks WHERE id = " + id + ";COMMIT;";
-        this.exec(command);
+        String command = "BEGIN TRANSACTION;DELETE FROM tasks WHERE id = " + id + ";COMMIT;";
+        execs(command);
     }
     /**
     * returns rows count
@@ -118,7 +109,7 @@ public class SQLiteBridge implements Bridge{
                         st.dispose();
                         return null;
                     } else {
-                    TaskInfo taskTemp = new TaskInfo();
+                    TaskInfo taskTemp = new TaskInfoImpl();
                         if (st.hasRow()) {
                             taskTemp.setID((Integer)st.columnValue(0));
                             taskTemp.setName((String)st.columnValue(1));
@@ -145,21 +136,21 @@ public class SQLiteBridge implements Bridge{
     /**
     * Load all tasks from file.
     */
-    public Hashtable getAll(){
+    public Hashtable<Integer,TaskInfo> getAll(){
             final int columns = getCountID();
-            return queue.execute(new SQLiteJob<Hashtable>() {
-                protected Hashtable job(SQLiteConnection connection) throws SQLiteException {
+            return queue.execute(new SQLiteJob<Hashtable<Integer,TaskInfo>>() {
+                protected Hashtable<Integer,TaskInfo> job(SQLiteConnection connection) throws SQLiteException {
                     SQLiteStatement st = connection.prepare("SELECT * FROM tasks");
                     try {
-                        Hashtable h = new Hashtable();
+                        Hashtable<Integer,TaskInfo> h = new Hashtable<Integer,TaskInfo>();
                         for(int i = 0; i < columns; i++) {
                             if (!st.step()) {
                                 st.dispose();
                                 break;
                             } else {
-                                TaskInfo taskTemp = new TaskInfo();
+                                TaskInfo taskTemp = new TaskInfoImpl();
                                 if (st.hasRow()) {                                    
-                                    taskTemp.setID(i);
+                                    taskTemp.setID((Integer)st.columnValue(0));
                                     taskTemp.setName((String)st.columnValue(1));
                                     taskTemp.setInfo((String)st.columnValue(2));
                                     String s = (String)st.columnValue(3);
@@ -169,7 +160,7 @@ public class SQLiteBridge implements Bridge{
                                     taskTemp.setExec(new File((String)st.columnValue(3)));
                                 }
                                 taskTemp.setDate(new Date((Long) st.columnValue(4)));
-                                h.put(i,taskTemp);
+                                h.put(taskTemp.getID(),taskTemp);
                                 } else {
                                     st.dispose();
                                     break;
@@ -187,7 +178,7 @@ public class SQLiteBridge implements Bridge{
     * Edit task
     */
     public void editTask(int id, TaskInfo task){
-        StringBuffer sb = new StringBuffer("UPDATE tasks SET name='");
+        StringBuffer sb = new StringBuffer("BEGIN TRANSACTION;UPDATE tasks SET name='");
         sb.append(task.getName());
         sb.append("', info='");
         sb.append(task.getInfo());
@@ -200,7 +191,7 @@ public class SQLiteBridge implements Bridge{
         sb.append("',data=");
         sb.append(task.getDate().getTime());
         sb.append(" WHERE id = "+id+";COMMIT;");
-        final String command = sb.toString();
-        exec(command);
+        String command = sb.toString();
+        execs(command);
     }
 }

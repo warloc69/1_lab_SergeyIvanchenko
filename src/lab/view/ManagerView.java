@@ -1,6 +1,6 @@
 package lab.view;
 import lab.conntroller.ManagerControllerInterface;
-import lab.TaskInfo;
+import lab.*;
 import lab.model.*;
 import java.util.*;
 import javax.swing.*;
@@ -8,28 +8,38 @@ import java.awt.event.*;
 import java.awt.*;
 import java.io.*;
 import java.text.*;
-import lab.bridge.*;
 /**
  * Create user Interface
  */
 public class ManagerView extends JFrame implements Observer, Runnable {
     public static final long serialVersionUID = 123312332l;
-    private final int W = Toolkit.getDefaultToolkit().getScreenSize().width;
-    private final int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;    
+    private Integer id1 =-1;
     private ManagerControllerInterface controller;
     private Container pane = null;
+    private Object obj1 = null;
+    private int q = 0;
     JTable table = null;
     JScrollPane scr = null;
     Object[][] taskList = null;
-    Hashtable tasks = null;
+    Hashtable<Integer,TaskInfo> tasks = null;
     Thread thread = null;
+    private class ExeFilter extends javax.swing.filechooser.FileFilter {
+            public boolean accept(File f) {
+                return f.getName().toLowerCase().endsWith(".exe") ||
+                    f.isDirectory();
+            }
+            public String getDescription() {
+                return "Program";
+            }
+        }
     public ManagerView(){    
         pane = getContentPane();
-        setLayout(null);
+        setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
         setTitle("Task Manager");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(W,H);
+        setSize(500,600);
         thread = new Thread(this);
+        thread.setDaemon(true);
         thread.start();
     }
     /**
@@ -67,100 +77,114 @@ public class ManagerView extends JFrame implements Observer, Runnable {
     *    Load all swing element.
     */
     public void loadView(){
-        //------- Button Add Task
-        JButton bAddtask = new JButton("+");
-        bAddtask.setBounds(200,H-100,50,30);        
-        bAddtask.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    viewAddTask(0);
+        if (q != 1) {
+            q = 1;
+            //------- Button Add Task
+            ImageIcon add = new ImageIcon("img\\add.png");
+           final JButton bAddtask = new JButton(add);      
+            bAddtask.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent event) {
+                        viewAddTask(0);
+                    }
                 }
-            }
-        );
-        pane.add(bAddtask);
-        //------- Button Remove Task
-        JButton bRemovetask = new JButton("-");
-        bRemovetask.setBounds(260,H-100,50,30);
-        bRemovetask.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    int[] i = table.getSelectedRows();
-                    Integer id = (Integer)taskList[i[0]][4];
-                    controller.delTask(id);
+            );
+            pane.add(bAddtask);
+            //------- Button Remove Task
+            ImageIcon remove = new ImageIcon("img\\remove.png");
+            JButton bRemovetask = new JButton(remove);
+            bRemovetask.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent event) {
+                        int[] i = table.getSelectedRows();
+                        Integer id = (Integer)taskList[i[0]][4];
+                        controller.delTask(id);
+                    }
                 }
-            }
-        );
-        pane.add(bRemovetask);
-        //------ Button Edit Task
-        JButton bEdittask = new JButton("/");
-        bEdittask.setBounds(320,H-100,50,30);
-        bEdittask.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    viewEditTask();
+            );
+            pane.add(bRemovetask);
+            //------ Button Edit Task
+            ImageIcon edit = new ImageIcon("img\\edit.png");
+            JButton bEdittask = new JButton(edit);
+            bEdittask.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent event) {
+                        viewEditTask();
+                    }
                 }
-            }
-        );
-        pane.add(bEdittask);
-        //------ Button View Task
-        JButton bViewtask = new JButton("0_0");
-        bViewtask.setBounds(390,H-100,60,30);
-        bViewtask.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    viewViewTask();
+            );
+            pane.add(bEdittask);
+            //------ Button View Task
+            ImageIcon view = new ImageIcon("img\\view.png");
+            JButton bViewtask = new JButton(view);
+            bViewtask.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent event) {
+                        viewViewTask();
+                    }
                 }
-            }
-        );
-        pane.add(bViewtask);
-        setResizable(false);
-        setVisible(true);
+            );
+            addComponentListener( 
+                new ComponentAdapter() {
+                    public void componentResized(ComponentEvent e) {
+                        update(null,obj1);
+                    }
+                }
+            );
+            pane.add(bViewtask);
+            setVisible(true);
+        }
     }
 
     /**
      * Update informatio about tasks 
      * @param obj keep information about tasks
      */
+    @SuppressWarnings("unchecked")
     public void update(Observable obs, Object obj){
+        obj1 = obj;
         if (scr != null) {
             pane.remove(scr);
             scr = null;
             table = null;
         }
-        tasks = (Hashtable) obj;
-        Collection col = tasks.values();
-        Iterator it = col.iterator();
+        tasks = (Hashtable<Integer,TaskInfo>) obj;
+        Collection<TaskInfo> col = tasks.values();
+        Iterator<TaskInfo> it = col.iterator();
         int size = tasks.size();
         taskList = new Object[size][5];
         for (int i = 0; i < tasks.size(); i++) {
             if (!it.hasNext()) {
                 break;
             }
-            TaskInfo t = (TaskInfo) it.next();
+            TaskInfo t = it.next();
             taskList[i][0] = t.getName();
             taskList[i][1] = t.getInfo();
             taskList[i][2] = t.getDate().toString();
             if (t.getExec() != null) {
                 taskList[i][3] = t.getExec().getName();    
             } else {
-                taskList[i][3] = "null";
+                taskList[i][3] = " ";
             }
             taskList[i][4] = t.getID();
-        }
-        
-        
+        }       
         String [] columns = { "Task name", "Information", "Date", "Run Program"};
         //------- Create JTable
-        table = new JTable(taskList, columns);
-        scr = new JScrollPane(table);
-        scr.setBounds(0,0,W-15,H-150);
-        pane.add(scr);
+            table = new JTable(taskList, columns);
+            scr = new JScrollPane(table);
+            Dimension d = getSize();
+            scr.setBounds(0,60,d.width,d.height);
+            pane.add(scr);
+        
         loadView();
     }
     /**
     *    Show add / edit / view task dialog.
     */
+    @SuppressWarnings("fallthrough")
     public void viewAddTask(final int command){
+        int W = Toolkit.getDefaultToolkit().getScreenSize().width;
+    int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;  
         final JDialog f = new JDialog(this, true);
         f.setLayout(null);
         f.setSize(W/2,H/2);
@@ -222,7 +246,7 @@ public class ManagerView extends JFrame implements Observer, Runnable {
         tday.setBounds(65,150,60,30);
         f.add(tday);
         //----- JLabel Manth
-        final JLabel lManth = new JLabel("Manth:");
+        final JLabel lManth = new JLabel("Month:");
         lManth.setBounds(10,180,50,30);
         f.add(lManth);
         //----- JTextField Manth
@@ -242,7 +266,8 @@ public class ManagerView extends JFrame implements Observer, Runnable {
         lFile.setBounds(125,H/2-105,(W/4-65)*2,30);    
         f.add(lFile);
         //----- JChoose Execute file
-        final JFileChooser exefile = new JFileChooser();    
+        final JFileChooser exefile = new JFileChooser();   
+        exefile.setFileFilter(new ExeFilter());
         JButton bexefile = new JButton("Run program");
         bexefile.setBounds(10,H/2-105,110,30);    
         bexefile.addActionListener(
@@ -264,8 +289,8 @@ public class ManagerView extends JFrame implements Observer, Runnable {
                 save = new JButton("Save");
                 int[] i = table.getSelectedRows();
                 Calendar cal = Calendar.getInstance();
-                Integer id1 = (Integer) taskList[i[0]][4];
-                TaskInfo t1 = (TaskInfo) tasks.get(id1);
+                id1 = (Integer) taskList[i[0]][4];
+                TaskInfo t1 =  tasks.get(id1);
                 cal.setTime(t1.getDate());
                 tYear.setText(cal.get(Calendar.YEAR)+"");
                 tManth.setText((cal.get(Calendar.MONTH)+1)+"");
@@ -285,8 +310,8 @@ public class ManagerView extends JFrame implements Observer, Runnable {
                 save = new JButton("Ok");
                 int[] i = table.getSelectedRows();
                 Calendar cal = Calendar.getInstance();
-                Integer id1 = (Integer) taskList[i[0]][4];
-                TaskInfo t1 = (TaskInfo) tasks.get(id1);
+                id1 = (Integer) taskList[i[0]][4];
+                TaskInfo t1 =  tasks.get(id1);
                 cal.setTime(t1.getDate());
                 tYear.setText(cal.get(Calendar.YEAR)+"");
                 tManth.setText((cal.get(Calendar.MONTH)+1)+"");
@@ -307,11 +332,6 @@ public class ManagerView extends JFrame implements Observer, Runnable {
         save.addActionListener(
         new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                if (command == 1) {
-                    int[] i = table.getSelectedRows();
-                    Integer id = (Integer) taskList[i[0]][4];
-                    controller.delTask(id);
-                }
                 if (command == 2) {
                     f.dispose();
                     return;
@@ -488,16 +508,20 @@ public class ManagerView extends JFrame implements Observer, Runnable {
                 // End Validation
                 Calendar cal = Calendar.getInstance();
                 cal.set(Year,Manth-1,Day,Hours,Minits,Seconds);    
-                TaskInfo ts = new TaskInfo();
+                TaskInfo ts = new TaskInfoImpl();
                 ts.setName(tname.getText());
                 ts.setInfo(tinfo.getText());
                 ts.setDate(cal.getTime());
                 if (exefile.getSelectedFile() != null) {
                     ts.setExec(exefile.getSelectedFile());
                 } else {
-                    ts.setExec(new File("null"));
+                    ts.setExec(new File(" "));
                 }
-                controller.addTask(ts);
+                if (command == 1) {
+                    controller.editTask(id1,ts);
+                } else {
+                    controller.addTask(ts);
+                }
                 f.dispose();
             }
         });
@@ -545,6 +569,8 @@ public class ManagerView extends JFrame implements Observer, Runnable {
     *    Show execute dialog.
     */
     public void viewMassage(TaskInfo ts) {
+    int W = Toolkit.getDefaultToolkit().getScreenSize().width;
+    int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;    
         if (ts.getExec() != null){
             Runtime r = Runtime.getRuntime();
             try {

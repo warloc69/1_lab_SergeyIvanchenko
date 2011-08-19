@@ -1,4 +1,4 @@
-package lab.bridge;
+package lab.model.bridge;
 import lab.TaskInfo;
 import java.util.*;
 import java.io.File;
@@ -36,7 +36,7 @@ public interface Bridge {
     /**
     * Load all tasks from file.
     */
-    public Hashtable getAll();
+    public Hashtable<Integer,TaskInfo> getAll();
     /**
     * Edit task
     */

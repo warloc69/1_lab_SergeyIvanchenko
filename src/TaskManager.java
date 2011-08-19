@@ -1,9 +1,6 @@
-import lab.bridge.*;
 import lab.model.*;
 import lab.view.*;
 import lab.conntroller.*;
-import java.util.*;
-import java.io.*;
 import lab.*;
 public class TaskManager{
     public static void main (String[] arrg){  

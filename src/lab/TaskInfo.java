@@ -1,99 +1,60 @@
 package lab;
 import java.util.Date;
 import java.io.*;
-/**
- * @author serg
- * @version 1.0
- * @created 06-Сер-2011 14:05:01
- */
-public class TaskInfo {
-    private int ID;
-    private Date taskDate;
-    private File taskDataExec;
-    private String taskInfo;
-    private String taskName;
-    public TaskInfo(){
 
-    }
-    public int getID() {
-        return ID;
-    }
+public interface TaskInfo {
     /**
-     * 
+    * returns task ID.
+    */
+    public int getID(); 
+    /**
+     * returns task Date.
      * 
      */
-    public Date getDate(){
-        return taskDate;
-    }
+    public Date getDate();
 
     /**
-     * 
+     * returns execute program.
      * 
      */
-    public File getExec(){
-        return taskDataExec;
-    }
+    public File getExec();
 
     /**
-     * 
+     * returns the information about task.
      * 
      */
-    public String getInfo(){
-        return taskInfo;
-    }
+    public String getInfo();
 
     /**
-     * 
+     * returns the task name.
      * 
      */
-    public String getName(){
-        return taskName;
-    }
+    public String getName();
+
+    /**
+     * Sets task Date.
+     * 
+     */
+    public void setDate(Date date);
+
+    /**
+     * Sets task execute program.
+     */
+    public void setExec(File file);
 
     /**
      * 
-     * @param data
+     * Sets the information about the task
      */
-    public void setDate(Date date){
-        taskDate = date;
-    }
+    public void setInfo(String info);
 
     /**
      * 
-     * @param file
+     * Sets the task name.
      */
-    public void setExec(File file){
-        taskDataExec = file;
-    }
-
+    public void setName(String name);
     /**
-     * 
-     * @param info
-     */
-    public void setInfo(String info){
-        taskInfo = info;
-    }
-
-    /**
-     * 
-     * @param name
-     */
-    public void setName(String name){
-        taskName = name;
-    }
-    public void setID(int id) {
-        ID = id;
-    }
-    public byte [] toBytes() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getName());
-        sb.append("|");
-        sb.append(getInfo());
-        sb.append("|");
-        sb.append(getDate().getTime());
-        sb.append("|");
-        sb.append(getExec().getPath());
-        String s = sb.toString();
-        return s.getBytes();
-    }
+    * Sets task ID.
+    */
+    public void setID(int id) ;
 }//end TaskInfo

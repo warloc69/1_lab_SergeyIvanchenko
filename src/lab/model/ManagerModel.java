@@ -1,17 +1,17 @@
 package lab.model;
 import java.util.*;
 import lab.TaskInfo;
-import lab.bridge.*;
+import lab.model.bridge.*;
 import lab.view.*;
 import java.io.*;
 
 public class ManagerModel extends Observable implements  MannagerWrite {
     private Bridge SQLBridge;
-    private Hashtable taskMap;
+    private Hashtable<Integer,TaskInfo> taskMap;
     private int maxID;
     public ManagerModel() {
         SQLBridge = SQLiteBridge.getInstance();
-        taskMap = new Hashtable();
+        taskMap = new Hashtable<Integer,TaskInfo>();
         maxID = 0;
         loadTask();
     }
@@ -27,7 +27,14 @@ public class ManagerModel extends Observable implements  MannagerWrite {
     * return maximal ID
     */
     public int getMaxID() {
-        return maxID;
+        int i = 0;
+        while (true) {
+            if(!taskMap.containsKey(i)) {
+                return i;
+            } else {
+                i++;
+            }
+        }
     }
     /**
     * Load task from BD.
@@ -35,7 +42,6 @@ public class ManagerModel extends Observable implements  MannagerWrite {
     @SuppressWarnings("unchecked")
     public void loadTask() {
         taskMap = SQLBridge.getAll();
-        maxID = taskMap.size();
     }
 
      /**
@@ -66,5 +72,9 @@ public class ManagerModel extends Observable implements  MannagerWrite {
     */
     public void editTask(int id, TaskInfo task) {
         SQLBridge.editTask(id,task);
+        taskMap.clear();
+        loadTask();
+        setChanged();
+        notifyObservers(taskMap.clone());
     }
 }//end ManagerModel
