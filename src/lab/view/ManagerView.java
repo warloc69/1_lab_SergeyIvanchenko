@@ -17,7 +17,7 @@ public class ManagerView extends JFrame implements Observer, Runnable {
     private ManagerControllerInterface controller;
     private Container pane = null;
     private Object obj1 = null;
-    private int q = 0;
+    private int loadFirstView = 0;
     JTable table = null;
     JScrollPane scr = null;
     Object[][] taskList = null;
@@ -51,20 +51,20 @@ public class ManagerView extends JFrame implements Observer, Runnable {
             try {
                 thread.sleep(1000);
             } catch (InterruptedException e) {}
-            if (tasks != null) {
-                Collection col = tasks.values();
-                Iterator it = col.iterator();
-                for (int i = 0; i < tasks.size(); i++) {
-                    if (!it.hasNext()) {
-                        break;
-                    }
-                    TaskInfo t = (TaskInfo) it.next();
-                    if (t.getDate().before(new Date())) {
-                        viewMassage(t);
-                        controller.delTask(t.getID());
-                    }
-                }
-            }
+				if (tasks != null) {
+					Collection<TaskInfo> col = tasks.values();
+					Iterator<TaskInfo> it = col.iterator();
+					for (int i = 0; i < tasks.size(); i++) {
+						if (!it.hasNext()) {
+							break;
+						}
+						TaskInfo t =  it.next();
+						if (t.getDate().before(new Date())) {
+							viewMassage(t);
+							controller.delTask(t.getID());
+						}
+					}
+				}
         }
     }
     /**
@@ -77,8 +77,8 @@ public class ManagerView extends JFrame implements Observer, Runnable {
     *    Load all swing element.
     */
     public void loadView(){
-        if (q != 1) {
-            q = 1;
+        if (loadFirstView != 1) {
+            loadFirstView = 1;
             //------- Button Add Task
             ImageIcon add = new ImageIcon("img\\add.png");
            final JButton bAddtask = new JButton(add);      
@@ -181,7 +181,6 @@ public class ManagerView extends JFrame implements Observer, Runnable {
     /**
     *    Show add / edit / view task dialog.
     */
-    @SuppressWarnings("fallthrough")
     public void viewAddTask(final int command){
         int W = Toolkit.getDefaultToolkit().getScreenSize().width;
     int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;  
@@ -213,54 +212,10 @@ public class ManagerView extends JFrame implements Observer, Runnable {
         final JTextArea tinfo = new JTextArea();
         tinfo.setBounds(65,60,(W/4-65)*2,90);
         f.add(tinfo);
-        //----- JLabel Hour
-        final JLabel lhour = new JLabel("Hour");
-        lhour.setBounds(135,150,30,30);
-        f.add(lhour);
-        //----- JTextField Hour
-        final JTextField thour = new JTextField();
-        thour.setBounds(135,180,30,30);
-        f.add(thour);
-        //----- JLabel Minits
-        final JLabel lMinits = new JLabel("Minits");
-        lMinits.setBounds(175,150,50,30);
-        f.add(lMinits);
-        //----- JTextField Minits
-        final JTextField tMinits = new JTextField();
-        tMinits.setBounds(175,180,30,30);
-        f.add(tMinits);
-        //----- JLabel Seconds
-        final JLabel lSec = new JLabel("Seconds");
-        lSec.setBounds(215,150,50,30);
-        f.add(lSec);
-        //----- JTextField Seconds
-        final JTextField tSec = new JTextField();
-        tSec.setBounds(215,180,30,30);
-        f.add(tSec);
-        //----- JLabel day
-        final JLabel lday = new JLabel("Day:");
-        lday.setBounds(10,150,30,30);
-        f.add(lday);
-        //----- JTextField day
-        final JTextField tday = new JTextField();
-        tday.setBounds(65,150,60,30);
-        f.add(tday);
-        //----- JLabel Manth
-        final JLabel lManth = new JLabel("Month:");
-        lManth.setBounds(10,180,50,30);
-        f.add(lManth);
-        //----- JTextField Manth
-        final JTextField tManth = new JTextField();
-        tManth.setBounds(65,180,60,30);
-        f.add(tManth);
-        //----- JLabel Year
-        final JLabel lYear = new JLabel("Year:");
-        lYear.setBounds(10,210,50,30);
-        f.add(lYear);
-        //----- JTextField Year
-        final JTextField tYear = new JTextField();
-        tYear.setBounds(65,210,60,30);
-        f.add(tYear);
+        //----- Date
+		final JSpinner dateChooser = new JSpinner(new SpinnerDateModel());
+		dateChooser.setBounds(65,160,160,30);
+        f.add(dateChooser);
         //----- JLabel file
         final JLabel lFile = new JLabel("Program:");
         lFile.setBounds(125,H/2-105,(W/4-65)*2,30);    
@@ -288,16 +243,9 @@ public class ManagerView extends JFrame implements Observer, Runnable {
             case 1: {
                 save = new JButton("Save");
                 int[] i = table.getSelectedRows();
-                Calendar cal = Calendar.getInstance();
                 id1 = (Integer) taskList[i[0]][4];
                 TaskInfo t1 =  tasks.get(id1);
-                cal.setTime(t1.getDate());
-                tYear.setText(cal.get(Calendar.YEAR)+"");
-                tManth.setText((cal.get(Calendar.MONTH)+1)+"");
-                tday.setText(cal.get(Calendar.DAY_OF_MONTH)+"");
-                thour.setText(cal.get(Calendar.HOUR)+"");
-                tMinits.setText(cal.get(Calendar.MINUTE)+"");
-                tSec.setText(cal.get(Calendar.SECOND)+"");
+				dateChooser.setValue(t1.getDate());
                 tname.setText(t1.getName());
                 tinfo.setText(t1.getInfo());
                 if (t1.getExec() != null) {
@@ -309,16 +257,9 @@ public class ManagerView extends JFrame implements Observer, Runnable {
             case 2: {
                 save = new JButton("Ok");
                 int[] i = table.getSelectedRows();
-                Calendar cal = Calendar.getInstance();
                 id1 = (Integer) taskList[i[0]][4];
                 TaskInfo t1 =  tasks.get(id1);
-                cal.setTime(t1.getDate());
-                tYear.setText(cal.get(Calendar.YEAR)+"");
-                tManth.setText((cal.get(Calendar.MONTH)+1)+"");
-                tday.setText(cal.get(Calendar.DAY_OF_MONTH)+"");
-                thour.setText(cal.get(Calendar.HOUR)+"");
-                tMinits.setText(cal.get(Calendar.MINUTE)+"");
-                tSec.setText(cal.get(Calendar.SECOND)+"");
+				dateChooser.setValue(t1.getDate());
                 tname.setText(t1.getName());
                 tinfo.setText(t1.getInfo());
                 if (t1.getExec() != null) {
@@ -336,182 +277,10 @@ public class ManagerView extends JFrame implements Observer, Runnable {
                     f.dispose();
                     return;
                 }
-                int Year = 0;
-                int Manth = 0;
-                int Day = 0;
-                int Hours = 0;
-                int Minits = 0;
-                int Seconds = 0;
-                    boolean ret = false;
-                    boolean year = true;
-                    boolean month = true;
-                    boolean day = true;
-                    boolean hour = true;
-                    boolean min = true;
-                    boolean sec = true;
-                // Validation
-                try {
-                    Year = Integer.parseInt(tYear.getText());
-                } catch (NumberFormatException e) {
-                    tYear.setForeground(new Color(255,10,10));
-                    tYear.setBackground(new Color(0,50,0));
-                    ret = true;
-                    year = false;
-                }
-                try {
-                    Manth = Integer.parseInt(tManth.getText());
-                } catch (NumberFormatException e) {
-                    tManth.setForeground(new Color(255,10,10));
-                    tManth.setBackground(new Color(0,50,0));
-                    ret = true;
-                    month = false;
-                }
-                try {
-                    Day = Integer.parseInt(tday.getText());
-                } catch (NumberFormatException e) {
-                    tday.setForeground(new Color(255,10,10));
-                    tday.setBackground(new Color(0,50,0));
-                    ret = true;
-                    day = false;
-                }
-                try {
-                    Hours = Integer.parseInt(thour.getText());
-                } catch (NumberFormatException e) {
-                    thour.setForeground(new Color(255,10,10));
-                    thour.setBackground(new Color(0,50,0));
-                    ret = true;
-                    hour = false;
-                }
-                try {
-                    Minits = Integer.parseInt(tMinits.getText());
-                } catch (NumberFormatException e) {
-                    tMinits.setForeground(new Color(255,10,10));
-                    tMinits.setBackground(new Color(0,50,0));
-                    ret = true;
-                    min = false;
-                }
-                try {
-                    Seconds = Integer.parseInt(tSec.getText());
-                } catch (NumberFormatException e) {
-                    tSec.setForeground(new Color(255,10,10));
-                    tSec.setBackground(new Color(0,50,0));
-                    ret = true;
-                    sec = false;
-                }
-                
-                if ((Year > 2111) || (Year < 2011)) {
-                    tYear.setForeground(new Color(255,10,10));
-                    tYear.setBackground(new Color(0,50,0));
-                    ret = true;
-                } else if (year != false){
-                    tYear.setForeground(Color.BLACK);
-                    tYear.setBackground(Color.WHITE);
-                }
-                if ((Hours > 24) || (Hours < 0)) {
-                    thour.setForeground(new Color(255,10,10));
-                    thour.setBackground(new Color(0,50,0));
-                    ret = true;
-                } else if (hour != false){
-                    thour.setForeground(new Color(0,0,0));
-                    thour.setBackground(new Color(255,255,255));
-                }
-                if ((Minits > 59) || (Minits < 0)) {
-                    tMinits.setForeground(new Color(255,10,10));
-                    tMinits.setBackground(new Color(0,50,0));
-                    ret = true;
-                } else if (min != false){
-                    tMinits.setForeground(new Color(0,0,0));
-                    tMinits.setBackground(new Color(255,255,255));
-                }
-                if ((Seconds > 60) || (Seconds < 0)) {
-                    tSec.setForeground(new Color(255,10,10));
-                    tSec.setBackground(new Color(0,50,0));
-                    ret = true;
-                } else if (sec != false){
-                    tSec.setForeground(new Color(0,0,0));
-                    tSec.setBackground(new Color(255,255,255));
-                }
-                if ((Manth > 12) || (Manth < 1)) {
-                    tManth.setForeground(new Color(255,10,10));
-                    tManth.setBackground(new Color(0,50,0));
-                    ret = true;
-                } else if (month != false){
-                    tManth.setForeground(new Color(0,0,0));
-                    tManth.setBackground(new Color(255,255,255));
-                }
-                if ((Day > 31) || (Manth < 1)) {
-                    tday.setForeground(new Color(255,10,10));
-                    tday.setBackground(new Color(0,50,0));
-                    ret = true;
-                } else if (day != false){
-                    tday.setForeground(new Color(0,0,0));
-                    tday.setBackground(new Color(255,255,255));
-                }
-                 switch (Manth) {
-                    case 1:{}
-                    case 3:{}
-                    case 5:{}
-                    case 7:{}
-                    case 8:{}
-                    case 10:{}
-                    case 11:{}
-                    case 12: {
-                        if ((Day > 31) || (Day < 1)) {
-                            tday.setForeground(new Color(255,10,10));
-                            tday.setBackground(new Color(0,50,0));
-                            ret = true;
-                        } else {
-                            tday.setForeground(new Color(0,0,0));
-                            tday.setBackground(new Color(255,255,255));
-                        }
-                        break;
-                    }
-                    case 4: {}
-                    case 6: {}
-                    case 9: {
-                        if ((Day > 30) || (Day < 1)) {
-                            tday.setForeground(new Color(255,10,10));
-                            tday.setBackground(new Color(0,50,0));
-                            ret = true;
-                        } else {
-                            tday.setForeground(new Color(0,0,0));
-                        tday.setBackground(new Color(255,255,255));
-                        }
-                        break;
-                    }
-                    case 2 : {
-                        if (Year % 4 == 0) {
-                            if ((Day > 29) || (Day < 1)) {
-                                tday.setForeground(new Color(255,10,10));
-                                tday.setBackground(new Color(0,50,0));
-                                ret = true;
-                            } else {
-                                tday.setForeground(new Color(0,0,0));
-                                tday.setBackground(new Color(255,255,255));
-                            }
-                        } else {
-                            if ((Day > 28) || (Day < 1)) {
-                                tday.setForeground(new Color(255,10,10));
-                                tday.setBackground(new Color(0,50,0));
-                                ret = true;
-                            } else {
-                                tday.setForeground(new Color(0,0,0));
-                                tday.setBackground(new Color(255,255,255));
-                            }
-                        }
-                        break;
-                    }
-                 }
-                if (ret) {
-                    return;
-                }
-                // End Validation
-                Calendar cal = Calendar.getInstance();
-                cal.set(Year,Manth-1,Day,Hours,Minits,Seconds);    
                 TaskInfo ts = new TaskInfoImpl();
                 ts.setName(tname.getText());
                 ts.setInfo(tinfo.getText());
-                ts.setDate(cal.getTime());
+                ts.setDate((Date)dateChooser.getValue());
                 if (exefile.getSelectedFile() != null) {
                     ts.setExec(exefile.getSelectedFile());
                 } else {
@@ -533,18 +302,11 @@ public class ManagerView extends JFrame implements Observer, Runnable {
         new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 f.dispose();
-            }
-            
+            }            
         });
         f.add(cancel);    
         f.setResizable(false);
         if (command == 2) {
-            tYear.setEnabled(false);
-            tManth.setEnabled(false);
-            tday.setEnabled(false);
-            thour.setEnabled(false);
-            tMinits.setEnabled(false);
-            tSec.setEnabled(false);
             tname.setEnabled(false);
             tinfo.setEnabled(false);
             f.remove(bexefile);
@@ -571,7 +333,7 @@ public class ManagerView extends JFrame implements Observer, Runnable {
     public void viewMassage(TaskInfo ts) {
     int W = Toolkit.getDefaultToolkit().getScreenSize().width;
     int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;    
-        if (ts.getExec() != null){
+        if (ts.getExec() != null && !ts.getExec().getName().equals(" ")){
             Runtime r = Runtime.getRuntime();
             try {
                 r.exec(ts.getExec().getPath());
