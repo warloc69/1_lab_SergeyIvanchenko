@@ -1,7 +1,6 @@
 package lab.model.bridge;
 import lab.TaskInfo;
 import java.util.*;
-import java.io.File;
 /**
  * @author serg
  * @version 1.0

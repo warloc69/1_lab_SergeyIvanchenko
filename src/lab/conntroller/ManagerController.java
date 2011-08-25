@@ -1,6 +1,7 @@
 package lab.conntroller;
 import lab.model.MannagerWrite;
 import lab.*;
+import java.util.Date;
 
 public class ManagerController implements ManagerControllerInterface {
 
@@ -9,12 +10,16 @@ public class ManagerController implements ManagerControllerInterface {
     public ManagerController(){
 
     }
-
     /**
      * Add task
      */
-    public void addTask(TaskInfo task){
-        model.addTask(task);
+    public boolean addTask(TaskInfo task){
+        if (validDate(task)) {
+            model.addTask(task);
+            return true;
+        } else {
+            return false;
+        }
         
     }
 
@@ -22,21 +27,35 @@ public class ManagerController implements ManagerControllerInterface {
      * Remove task.
      * @param id remove task.
      */
-    public void delTask(int id){
-        model.removeTask(id);
+    public void delTask(int id){        
+        model.removeTask(id);    
     }
 
     /**
     * Edit task
     */
-    public void editTask(int id, TaskInfo task){
-        model.editTask(id,task) ;
+    public boolean editTask(int id, TaskInfo task){
+        if (validDate(task)) {
+            model.editTask(id,task);
+            return true;
+        } else {
+            return false;
+        }
     }
     /**
     * insert model into controller.
     */
     public void setModel(MannagerWrite model) {
         this.model = model;
+    }
+    /**
+    * validation date.
+    */
+    public boolean validDate (TaskInfo task) {
+        if (task.getDate().before(new Date())) {
+            return false;
+        }
+        return true;
     }
 
 }//end ManagerController

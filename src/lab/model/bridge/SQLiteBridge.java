@@ -18,7 +18,7 @@ public class SQLiteBridge implements Bridge{
             queue.execute(new SQLiteJob<Object>() {
                 protected Object job(SQLiteConnection connection) 
                         throws SQLiteException {
-                    connection.exec("BEGIN TRANSACTION;CREATE TABLE tasks (id INTEGER, name TEXT, info TEXT, file TEXT, data INTEGER);COMMIT");
+                    connection.exec("BEGIN TRANSACTION;CREATE TABLE IF NOT EXISTS tasks (id INTEGER, name TEXT, info TEXT, file TEXT, data INTEGER);COMMIT");
                     return null;
                 }                
             });

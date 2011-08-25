@@ -7,7 +7,7 @@ public interface ManagerControllerInterface {
     /**
      * Add task
      */
-    public void addTask(TaskInfo task);
+    public boolean addTask(TaskInfo task);
 
      /**
      * Remove task.
@@ -18,7 +18,7 @@ public interface ManagerControllerInterface {
     /**
     * Edit task
     */
-    public void editTask(int id, TaskInfo task);
+    public boolean editTask(int id, TaskInfo task);
     /**
     * insert model into controller.
     */
