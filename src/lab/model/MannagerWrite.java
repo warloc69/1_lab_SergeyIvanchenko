@@ -6,7 +6,7 @@ public interface MannagerWrite {
      * Remove task.
      * @param id remove task.
      */
-    public void removeTask(int id);
+    public void removeTask(long id);
 
     /**
      * Add task
@@ -15,5 +15,5 @@ public interface MannagerWrite {
     /**
     * Edit task
     */
-    public void editTask(int id, TaskInfo task);
+    public void editTask(long id, TaskInfo task);
 }

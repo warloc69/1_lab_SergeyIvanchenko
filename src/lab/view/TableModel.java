@@ -8,7 +8,7 @@ import javax.swing.table.*;
 public class TableModel extends AbstractTableModel {
     ArrayList<TaskInfo> info = null; 
     public static final long serialVersionUID = 213123123123l;
-    public TableModel(Hashtable<Integer,TaskInfo> table) {
+    public TableModel(Hashtable<Long,TaskInfo> table) {
         info = new ArrayList<TaskInfo>(table.values());
     }
     /**
@@ -21,7 +21,7 @@ public class TableModel extends AbstractTableModel {
     * Returns the column's count.
     */
     public int getColumnCount() {
-        return 5;
+        return 4;
     }
     /**
     * Returns the table's value.
@@ -83,7 +83,7 @@ public class TableModel extends AbstractTableModel {
     /**
     * Returns taskID.
     */
-    public int getID(int r) {
+    public long getID(int r) {
         return info.get(r).getID();
     }
     /**

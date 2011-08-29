@@ -4,45 +4,29 @@ import lab.TaskInfo;
 import lab.model.bridge.*;
 import lab.view.*;
 import java.io.*;
+import lab.exception.*;
 
-public class ManagerModel extends Observable implements  MannagerWrite, ModelGetInf {
+public class ManagerModel implements  MannagerWrite, ModelGetInf {
     private Bridge SQLBridge;
-    private Hashtable<Integer,TaskInfo> taskMap;
-    private Stack<Integer> freeID = null;
-    public ManagerModel() {
+	lab.model.observer.Observable lisener = null;
+    private Hashtable<Long,TaskInfo> taskMap;
+    private static class IDGenerator {
+		static long current = System.currentTimeMillis();
+		static public synchronized long get(){
+			return current++;
+		}
+	} 
+
+	public ManagerModel() {
         SQLBridge = SQLiteBridge.getInstance();
         loadTask();
-        getMaxID();
     }
     /**
     * Add all observer end update information about tasks.
     */
-    public void addObserver(Observer view) {
-        super.addObserver(view);
-        setChanged();
-        notifyObservers(this);
-    }
-    /**
-    * return maximal ID
-    */
-    public int getMaxID() {
-        if (freeID == null) {
-            freeID = new Stack<Integer>();
-            for (int i = 0; i < taskMap.size()+1; i++) {
-                if(!taskMap.containsKey(i)) {
-                    freeID.push(i);
-                } else {
-                }
-            }
-            return 0;
-        }
-        if (!freeID.empty()) {        
-            int i =  freeID.pop();
-            return i;
-        } else {
-            int i =  taskMap.size()+1;
-            return i;
-        }
+    public void addObserver(lab.model.observer.Observable view) {
+        lisener = view;
+		lisener.notifyGetAll(this);
     }
     /**
     * Load task from BD.
@@ -56,14 +40,10 @@ public class ManagerModel extends Observable implements  MannagerWrite, ModelGet
      * Remove task.
      * @param id remove task.
      */
-    public void removeTask(int id){
+    public void removeTask(long id){
         SQLBridge.removeTask(id);
         taskMap.remove(id);
-        freeID.push(id);
-        Long com = (ModelConst.removeCom << 31);
-        com += id;
-        setChanged();        
-        notifyObservers(com);
+        lisener.notifyRemove(id);
     }
 
     /**
@@ -71,36 +51,30 @@ public class ManagerModel extends Observable implements  MannagerWrite, ModelGet
      */
     @SuppressWarnings("unchecked")
     public void addTask(TaskInfo task){        
-        task.setID(getMaxID());
-        taskMap.put(task.getID(),task);        
-        SQLBridge.addTask(task);
-        Long com = (ModelConst.addCom << 31);
-        com += task.getID();
-        setChanged();
-        notifyObservers(com);
+        task.setID(IDGenerator.get());
+        taskMap.put(task.getID(),task);
+		SQLBridge.addTask(task);	
+        lisener.notifyAdd(task.getID());
     }
     /**
     * Edit task
     */
-    public void editTask(int id, TaskInfo task) {
+    public void editTask(long id, TaskInfo task) {
         SQLBridge.editTask(id,task);
         taskMap.put(id,task);
-        Long com = (ModelConst.editCom << 31);
-        com += id;
-        setChanged();
-        notifyObservers(com);
+        lisener.notifyEdit(id);
     }
     /**
     *    Returns All tasks
     */
     @SuppressWarnings("unchecked")
-    public Hashtable<Integer,TaskInfo> getAllTasks() {
-        return (Hashtable<Integer,TaskInfo>) taskMap.clone();
+    public Hashtable<Long,TaskInfo> getAllTasks() {
+        return (Hashtable<Long,TaskInfo>) taskMap.clone();
     }
     /**
     *    Returns task.
     */
-    public TaskInfo getTask(int id) {
+    public TaskInfo getTask(long id) {
         return SQLBridge.getTask(id);
     }
     

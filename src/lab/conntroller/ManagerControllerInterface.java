@@ -13,12 +13,12 @@ public interface ManagerControllerInterface {
      * Remove task.
      * @param id remove task.
      */
-    public void delTask(int id);
+    public void delTask(long id);
 
     /**
     * Edit task
     */
-    public boolean editTask(int id, TaskInfo task);
+    public boolean editTask(long id, TaskInfo task);
     /**
     * insert model into controller.
     */

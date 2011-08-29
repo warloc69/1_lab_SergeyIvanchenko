@@ -5,9 +5,9 @@ public interface ModelGetInf {
     /**
     *    Returns All tasks
     */
-    public Hashtable<Integer,TaskInfo> getAllTasks();
+    public Hashtable<Long,TaskInfo> getAllTasks();
     /**
     *    Returns task.
     */
-    public TaskInfo getTask(int id);
+    public TaskInfo getTask(long id);
 }

@@ -12,7 +12,7 @@ public interface Bridge {
      * Remove task.
      * @param id remove task.
      */
-    public void removeTask(int id); 
+    public void removeTask(long id); 
 
     /**
      * Add task
@@ -23,7 +23,7 @@ public interface Bridge {
     /**
     * Get task from file.
     */
-    public TaskInfo getTask(int id);
+    public TaskInfo getTask(long id);
      /**
      * Remove All task..
      */
@@ -31,13 +31,13 @@ public interface Bridge {
     /**
     * returns rows count
     */
-    public int getCountID(); 
+    public long getCountID(); 
     /**
     * Load all tasks from file.
     */
-    public Hashtable<Integer,TaskInfo> getAll();
+    public Hashtable<Long,TaskInfo> getAll();
     /**
     * Edit task
     */
-    public void editTask(int id, TaskInfo task);
+    public void editTask(long id, TaskInfo task);
 }

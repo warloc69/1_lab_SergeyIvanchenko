@@ -7,7 +7,7 @@ import java.io.*;
  * @created 06-Сер-2011 14:05:01
  */
 public class TaskInfoImpl implements TaskInfo {
-    private int ID;
+    private long ID;
     private Date taskDate;
     private File taskDataExec;
     private String taskInfo;
@@ -18,7 +18,7 @@ public class TaskInfoImpl implements TaskInfo {
     /**
     * returns task ID.
     */
-    public int getID() {
+    public long getID() {
         return ID;
     }
    /**
@@ -85,7 +85,7 @@ public class TaskInfoImpl implements TaskInfo {
     /**
     * Sets task ID.
     */
-    public void setID(int id) {
+    public void setID(long id) {
         ID = id;
     }
 }//end TaskInfo

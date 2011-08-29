@@ -6,7 +6,7 @@ public interface TaskInfo {
     /**
     * returns task ID.
     */
-    public int getID(); 
+    public long getID(); 
     /**
      * returns task Date.
      * 
@@ -56,5 +56,5 @@ public interface TaskInfo {
     /**
     * Sets task ID.
     */
-    public void setID(int id) ;
+    public void setID(long id) ;
 }//end TaskInfo
