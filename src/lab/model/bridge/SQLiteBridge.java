@@ -6,27 +6,34 @@ import java.util.Date;
 import java.util.*;
 import lab.exception.*;
 public class SQLiteBridge implements Bridge{
+	private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(SQLiteBridge.class);
     private static final SQLiteBridge INSTANCE = new SQLiteBridge();
     SQLiteQueue queue = null;
     private SQLiteBridge() {
         queue = new SQLiteQueue(new File("default.ndb"));
         queue.start();
-        queue.execute(new SQLiteJob<Object>() {
-            protected Object job(SQLiteConnection connection) 
+        SQLiteJob<Integer> job = queue.execute(new SQLiteJob<Integer>() {
+            protected Integer job(SQLiteConnection connection) 
                 throws SQLiteException {
                 try {
 					connection.exec("BEGIN TRANSACTION;CREATE TABLE IF NOT EXISTS tasks (id LONG, name TEXT, info TEXT, file TEXT, data INTEGER);COMMIT");
-                } catch (SQLiteException e) {
-					throw new BDException("Table Create Error",getError());
+					
+				} catch (SQLiteException e) {
+					return 0;
 				}
-				return null;
+				return -1;
             }                
         });
+		if (job.complete() == 0) {
+			new ExceptionView("1 DataBase create table error");
+		} else {
+			log.info("open DataBase, create or open table");
+		}
     }
     /**
      * Add task
      */
-    public void addTask(TaskInfo task){
+    public void addTask(TaskInfo task)throws BDException {
         StringBuffer sb = new StringBuffer("BEGIN TRANSACTION;INSERT INTO tasks VALUES('");
         sb.append(task.getID());
         sb.append("','");
@@ -43,17 +50,21 @@ public class SQLiteBridge implements Bridge{
         sb.append(task.getDate().getTime());
         sb.append("');COMMIT;");
         final String command = sb.toString();
-		queue.execute(new SQLiteJob<Object>() {
-			protected Object job(SQLiteConnection connection) 
+		SQLiteJob<Integer> job = queue.execute(new SQLiteJob<Integer>() {
+			protected Integer job(SQLiteConnection connection) 
 				throws SQLiteException, BDException {
 				try {
 					connection.exec(command);
+					log.info("DataBase, add task");
 				} catch (SQLiteException e) {
-					throw new BDException("Add task Error",getError());
+					return 0;
 				}
-				return null;
+				return -1;
 			}
 		});
+		if (job.complete() == 0) {
+			throw new BDException("Add task Error");
+		}
     }	
     /**
     *    return SQLiteBridge object.
@@ -64,61 +75,74 @@ public class SQLiteBridge implements Bridge{
      /**
      * Remove All task..
      */
-    public void removeAll() {
+    public void removeAll() throws BDException{
 		final String command  = "BEGIN TRANSACTION;DELETE * FROM tasks;COMMIT;";
-		queue.execute(new SQLiteJob<Object>() {
-			protected Object job(SQLiteConnection connection) 
+		SQLiteJob<Integer> job = queue.execute(new SQLiteJob<Integer>() {
+			protected Integer job(SQLiteConnection connection) 
 				throws SQLiteException {
 				try {
 					connection.exec(command);
+					log.info("DataBase, remove all task");
 				} catch (SQLiteException e) {
-					throw new BDException("Remove all tasks Error",getError());
+					return 0;
 				}
-				return null;
+				return -1;
 			}
 		});
+		if (job.complete() == 0) {
+			throw new BDException("Remove all tasks Error");
+		}
     }
      /**
      * Remove task.
      * @param id remove task.
      */
-    public void removeTask(long id) {
+    public void removeTask(long id) throws BDException{
         final String command = "BEGIN TRANSACTION;DELETE FROM tasks WHERE id = " + id + ";COMMIT;";
-        queue.execute(new SQLiteJob<Object>() {
-			protected Object job(SQLiteConnection connection) 
+        SQLiteJob<Integer> job = queue.execute(new SQLiteJob<Integer>() {
+			protected Integer job(SQLiteConnection connection) 
 				throws SQLiteException {
 				try {
 					connection.exec(command);
+					log.info("DataBase, remove task");
 				} catch (SQLiteException e) {
-					throw new BDException("Remove task Error",getError());
+					return 0;
 				}
-				return null;
+				return -1;
 			}
 		});
+		if (job.complete() == 0) {
+			throw new BDException("Remove task Error");			
+		}
     }
     /**
     * returns rows count
     */
-    public long getCountID() {
-        return queue.execute(new SQLiteJob<Long>() {
+    public long getCountID() throws BDException{
+         SQLiteJob<Long> job = queue.execute(new SQLiteJob<Long>() {
             protected Long job(SQLiteConnection connection) throws SQLiteException {
                 SQLiteStatement st = connection.prepare("SELECT COUNT(*) FROM tasks");
                 try {
                     st.step();
+					log.info("DataBase, get count tasks");
                     return st.columnLong(0);
 				} catch (SQLiteException e) {
-					throw new BDException("Get count id Error",getError());
+					return -1L;
                 } finally {
                     st.dispose();
                 }
             }
-        }).complete();
+        });
+		if (job.complete() == -1L) {
+			throw new BDException("Get count id Error");
+		}
+		return job.complete();
     }
     /**
     * Get task from file.
     */
-    public TaskInfo getTask(final long id){
-        return queue.execute(new SQLiteJob<TaskInfo>() {
+    public TaskInfo getTask(final long id) throws BDException{
+		SQLiteJob<TaskInfo> job = queue.execute(new SQLiteJob<TaskInfo>() {
             protected TaskInfo job(SQLiteConnection connection) throws SQLiteException {
                 SQLiteStatement st = connection.prepare("SELECT * FROM tasks WHERE id = " + id);
                 try {
@@ -138,6 +162,7 @@ public class SQLiteBridge implements Bridge{
                             taskTemp.setExec(new File((String)st.columnValue(3)));
                         }
                         taskTemp.setDate(new Date((Long) st.columnValue(4)));
+						log.info("DataBase, get task");
                         return taskTemp;
                         } else {
                             st.dispose();
@@ -145,19 +170,23 @@ public class SQLiteBridge implements Bridge{
                         }
                     }
 				} catch (SQLiteException e) {
-					throw new BDException("Get Task Error",getError());
+					return null;
                 } finally {
                     st.dispose();
                 }
             }
-        }).complete();
+        });
+		if (job.complete() == null) {
+			throw new BDException("Get Task Error");
+		}
+		return job.complete();
     }
     /**
     * Load all tasks from file.
     */
-    public Hashtable<Long,TaskInfo> getAll(){
+    public Hashtable<Long,TaskInfo> getAll() throws BDException {
             final long columns = getCountID();
-            return queue.execute(new SQLiteJob<Hashtable<Long,TaskInfo>>() {
+            SQLiteJob<Hashtable<Long,TaskInfo>> job =  queue.execute(new SQLiteJob<Hashtable<Long,TaskInfo>>() {
                 protected Hashtable<Long,TaskInfo> job(SQLiteConnection connection) throws SQLiteException {
                     SQLiteStatement st = connection.prepare("SELECT * FROM tasks");
                     try {
@@ -186,19 +215,24 @@ public class SQLiteBridge implements Bridge{
                                 }
                             }
                         }
+						log.info("DataBase, get all tasks");
                         return h;
 					} catch (SQLiteException e) {
-						throw new BDException("Get Tasks Error",getError());
+						return null;
                     } finally {
                         st.dispose();
                     }
                 }
-        }).complete();
+        });
+		if (job.complete() == null) {
+			throw new BDException("Get Task Error");
+		}
+		return job.complete();
     }
     /**
     * Edit task
     */
-    public void editTask(long id, TaskInfo task){
+    public void editTask(long id, TaskInfo task) throws BDException {
         StringBuffer sb = new StringBuffer("BEGIN TRANSACTION;UPDATE tasks SET name='");
         sb.append(stringChanger(task.getName()));
         sb.append("', info='");
@@ -211,19 +245,23 @@ public class SQLiteBridge implements Bridge{
         }
         sb.append("',data=");
         sb.append(task.getDate().getTime());
-        sb.append(" WHERE id = "+id+";COMMIT;");
+        sb.append(" WHERE id = "+ id +";COMMIT;");
         final String command = sb.toString();
-        queue.execute(new SQLiteJob<Object>() {
-			protected Object job(SQLiteConnection connection) 
+        SQLiteJob<Integer> job = queue.execute(new SQLiteJob<Integer>() {
+			protected Integer job(SQLiteConnection connection) 
 				throws SQLiteException {
 				try {
 					connection.exec(command);
+					log.info("DataBase, edit task");
 				} catch (SQLiteException e) {
-					throw new BDException("Edit task Error",getError());
+					return 0;
 				}
-				return null;
+				return -1;
 			}
 		});
+		if (job.complete() == 0 ) {
+			throw new BDException("Edit task Error");
+		}
     }
 	/**
 	* Chang string character number 39 (') for the adding into the Database.

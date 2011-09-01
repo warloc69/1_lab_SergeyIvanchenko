@@ -14,6 +14,7 @@ import java.text.*;
  * Create user Interface
  */
 public class ManagerView extends JFrame implements lab.model.observer.Observable, Runnable {
+	private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ManagerView.class);
     private Long id1 =-1l;
     private ManagerControllerInterface controller;
     private ModelGetInf mgi = null;
@@ -29,6 +30,10 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
     private JMenu menuCom = null;
     private JMenu menuAbout = null;
     private JMenu menuOpt = null;
+	private JLabel total = null;
+	private JLabel today = null;
+	private JLabel tomorrow = null;
+	private JLabel week = null;	
     public static final long serialVersionUID = 123312332l;
     private class ExeFilter extends javax.swing.filechooser.FileFilter {
             public boolean accept(File f) {
@@ -95,7 +100,11 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                         if (i.length == 0) {return;}
                         long id = tableModel.getID(i[0]);
                         lastSelected = i[0];
-                        controller.delTask(id);
+                        try {
+							controller.delTask(id);
+						} catch (Exception e) {
+							new ExceptionView(e.getMessage());							
+						}
                     }
                 }
             );
@@ -302,11 +311,6 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 }
                 TaskInfo ts = new TaskInfoImpl();
                 ts.setDate((Date)dateChooser.getValue());
-                if (ts.getDate().before(new Date())) {
-					Border e = BorderFactory.createMatteBorder(10,10,10,10,Color.RED);
-					b.setBorder(e);
-                    return;
-                }
                 ts.setName(tname.getText());
                 ts.setInfo(tinfo.getText());
                 if (exefile.getSelectedFile() != null) {
@@ -316,29 +320,17 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 }
                 if (command == 1) {
                     try {
-						if(!controller.editTask(id1,ts)) {
-							return;
-						}
-					} catch (BadTaskDateException e) {
-						Border bord = BorderFactory.createMatteBorder(10,10,10,10,Color.RED);
-						b.setBorder(bord);
-						return;
-					} catch (BadTaskExecException e1) {
-						lFile.setForeground(Color.RED);
-						return;
-					}
+						controller.editTask(id1,ts);
+					} catch (Exception e) {
+						new ExceptionView(e.getMessage(),f);
+						return; 
+					} 
                 } else {
                    try {
-					   if(!controller.addTask(ts)) {
-							return;
-						}
-					} catch (BadTaskDateException e) {
-						Border bord = BorderFactory.createMatteBorder(10,10,10,10,Color.RED);
-						b.setBorder(bord);
-						return;
-					} catch (BadTaskExecException e1) {
-						lFile.setForeground(Color.RED);
-						return;
+					   controller.addTask(ts);
+					} catch (Exception e) {
+						new ExceptionView(e.getMessage(),f);
+						return; 
 					}
                 }
                 f.dispose();
@@ -435,7 +427,11 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
                     lastSelected = tableModel.getSelectedRow(ts);
-					controller.delTask(ts.getID());
+					try {
+						controller.delTask(ts.getID());
+					} catch (Exception e) {
+					    new ExceptionView(e.getMessage(),msg);
+					}
 					msg.dispose();
                     loadView();
                 }
@@ -467,9 +463,12 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 if (dateChooser.isEnabled()) {
                     ts.setDate((Date)dateChooser.getValue());
                     lastSelected = tableModel.getSelectedRow(ts);                    
-                    if (!controller.editTask(ts.getID(),ts)) {    
-                        return;
-                    }
+                    try {
+						controller.editTask(ts.getID(),ts);
+					} catch (Exception e) {
+						new ExceptionView(e.getMessage(),msg);
+						return; 
+					}
                     dateChooser.setEnabled(false);
                     msg.dispose();
                     return;
@@ -485,7 +484,11 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                         }
                     }
                     lastSelected = tableModel.getSelectedRow(ts);    
-                    controller.delTask(ts.getID());
+                    try {
+						controller.delTask(ts.getID());
+					} catch (Exception e) {
+					    new ExceptionView(e.getMessage(),msg);
+					}
                 }
                 msg.dispose();
                 
@@ -649,7 +652,9 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             ViewVariable.autoRun = in.readBoolean();
             ViewVariable.H = in.readInt();
             ViewVariable.W = in.readInt();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+			log.error("IO Exception, read option");
+		}
     }
     /**
     * Saves option into the file.
@@ -671,6 +676,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             out.flush();
             out.close();
         } catch (IOException e1){
+			log.error("IO Exception, write option");
         }
     }
     /**
@@ -708,8 +714,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
      * @param obj keep information about tasks
      */
     public void updateTable(){
-         //------- Create JTable            
-        if (table == null) {
+         //------- Create JTable
+		if (table == null) {
             table = new JTable(tableModel);
             table.addMouseListener(
                 new MouseAdapter() {
@@ -721,8 +727,28 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 }
             );
             JScrollPane scr = new JScrollPane(table);
-            pane.add(scr);
+			Box b = Box.createVerticalBox();
+			b.add(scr);
+			Box b1 = Box.createHorizontalBox();
+			b.add(b1);
+			total = new JLabel("TotalSize :" + tableModel.total); 
+			total.setMaximumSize(new Dimension(100,30));
+			b1.add(total);
+			today = new JLabel("  Today :" + tableModel.today);  //to do
+			today.setMaximumSize(new Dimension(100,30));
+			b1.add(today);
+			tomorrow = new JLabel("  Tomorrow :" + tableModel.tomorrow);  //to do
+			tomorrow.setMaximumSize(new Dimension(100,30));
+			b1.add(tomorrow);
+			week = new JLabel("  This week :" + tableModel.week);  //to do
+			week.setMaximumSize(new Dimension(100,30));
+			b1.add(week);
+            pane.add(b);
         } else {
+			total.setText("TotalSize :" + tableModel.total);
+			today.setText("  Today :" + tableModel.today);
+			tomorrow.setText("  Tomorrow :" + tableModel.tomorrow);
+			week.setText("  This week :" + tableModel.week);
             tableModel.fireTableDataChanged();
         }
         loadView();
@@ -732,7 +758,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
 	*/
 	public void notifyGetAll(ModelGetInf inf) {
         mgi = inf;
-        tasks = mgi.getAllTasks();
+        tasks = mgi.getAllTasks();		
         tableModel = new TableModel(tasks);
 		updateTable();
 	}
@@ -740,17 +766,25 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
 	* Add task into the table.
 	*/
 	public void notifyAdd(long id) {
-		tasks.put(id,mgi.getTask(id));
-        tableModel.addTask(tasks.get(id));
-		updateTable();
+		try {
+			tasks.put(id,mgi.getTask(id));
+			tableModel.addTask(tasks.get(id));
+			updateTable();
+		} catch (Exception e) {
+		new ExceptionView(e.getMessage());
+		}
 	}
 	/**
 	* Edit task in the table.
 	*/
 	public void notifyEdit(long id) {
-        tasks.put(id,mgi.getTask(id));
-        tableModel.editTask(lastSelected,tasks.get(id));
-		updateTable();
+		try {
+			tasks.put(id,mgi.getTask(id));
+			tableModel.editTask(lastSelected,tasks.get(id));
+			updateTable();
+			} catch (Exception e) {
+			new ExceptionView(e.getMessage());
+		}
 	}
 	/**
 	* Remove task from table.

@@ -3,18 +3,18 @@ package lab.exception;
 *    Class create exception BadTaskExecException.
 *    This exception calls, when the info in the task is wronge.
 */
-public class BadTaskExecException extends RuntimeException {
+public class BadTaskException extends Exception {
 	public static final long serialVersionUID = 1233123322l;
-    public BadTaskExecException() {
+    public BadTaskException() {
         super();
     }
-    public BadTaskExecException(String info) {
+    public BadTaskException(String info) {
         super(info);
     }
-	public BadTaskExecException(String message, Throwable cause) {
+	public BadTaskException(String message, Throwable cause) {
         super (message, cause);
 	}
-	public BadTaskExecException(Throwable cause) {
+	public BadTaskException(Throwable cause) {
         super(cause);
     }
 }

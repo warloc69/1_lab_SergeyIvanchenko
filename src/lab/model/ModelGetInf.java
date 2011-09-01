@@ -1,6 +1,7 @@
 package lab.model;
 import java.util.Hashtable;
 import lab.TaskInfo;
+import lab.exception.*;
 public interface ModelGetInf {
     /**
     *    Returns All tasks
@@ -9,5 +10,5 @@ public interface ModelGetInf {
     /**
     *    Returns task.
     */
-    public TaskInfo getTask(long id);
+    public TaskInfo getTask(long id) throws BDException;
 }
