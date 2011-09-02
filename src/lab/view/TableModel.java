@@ -8,19 +8,19 @@ import javax.swing.table.*;
 public class TableModel extends AbstractTableModel {
     ArrayList<TaskInfo> info = null; 
     public static final long serialVersionUID = 213123123123l;
-	public int total = 0;
-	public int today = 0;
-	public int tomorrow = 0;
-	public int week = 0;
+    public int total = 0;
+    public int today = 0;
+    public int tomorrow = 0;
+    public int week = 0;
     public TableModel(Hashtable<Long,TaskInfo> table) {
         info = new ArrayList<TaskInfo>(table.values());
-		sort();
-		recount();
+        sort();
+        recount();
     }
-	/**
+    /**
     *    This method sort table.
     */
-    public void sort() {		
+    public void sort() {        
         for (int j = 0; j < info.size(); j++)
             for (int i = 0; i < info.size(); i++) {
                 if (info.get(j).getDate().getTime() < info.get(i).getDate().getTime()) {
@@ -34,7 +34,7 @@ public class TableModel extends AbstractTableModel {
     * Returns the row's count.
     */
     public int getRowCount() {
-		total = info.size();
+        total = info.size();
         return total;
     }
     /**
@@ -110,26 +110,26 @@ public class TableModel extends AbstractTableModel {
     * add task to the table.
     */
     public void addTask(TaskInfo t) {
-		Calendar cal1 = Calendar.getInstance();		
-		cal1.setTime(t.getDate());
-		Calendar cal2 = Calendar.getInstance();
-		cal2.setTime(new Date());
-		if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
-			if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
-				today++;			
-			}
-			if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
-				tomorrow++;			
-			}
-			if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
-				week++;			
-			}
-		}
-		total++;
-		for (int i = 0; i < info.size(); i++) {
+        Calendar cal1 = Calendar.getInstance();        
+        cal1.setTime(t.getDate());
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(new Date());
+        if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
+            if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
+                today++;            
+            }
+            if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
+                tomorrow++;            
+            }
+            if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
+                week++;            
+            }
+        }
+        total++;
+        for (int i = 0; i < info.size(); i++) {
             if (t.getDate().getTime() < info.get(i).getDate().getTime()) {
                 info.add(i,t);
-				return;
+                return;
                 }
             }
         info.add(t);
@@ -139,8 +139,14 @@ public class TableModel extends AbstractTableModel {
     */
     public void editTask(int id, TaskInfo t) {
             info.set(id,t);
-			recount();
+            recount();
     }
+	/**
+	*return task;
+	*/
+	public TaskInfo get(int r) {
+		return info.get(r);
+	}
     /**
     * Returns the selected row.
     */
@@ -156,52 +162,51 @@ public class TableModel extends AbstractTableModel {
     * Remove the task from table.
     */
     public void removeTask(int id) {
-        Calendar cal1 = Calendar.getInstance();		
-		cal1.setTime(info.get(id).getDate());
-		Calendar cal2 = Calendar.getInstance();
-		cal2.setTime(new Date());
-		if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
-			if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
-				today--;			
-			}
-			if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
-				tomorrow--;			
-			}
-			if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
-				week--;			
-			}
-		}
-		total--;
-		info.remove(id); 
-		///recount();
+        Calendar cal1 = Calendar.getInstance();        
+        cal1.setTime(info.get(id).getDate());
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(new Date());
+        if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
+            if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
+                today--;            
+            }
+            if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
+                tomorrow--;            
+            }
+            if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
+                week--;            
+            }
+        }
+        total--;
+        info.remove(id);
     }
-	/**
-	*	change count task
-	*/
-	public void recount() {
-		today = 0;
-		tomorrow = 0;
-		week = 0;
-		total = 0;
-		 for (int i = 0; i < info.size() ; i++) {
-			 TaskInfo t = info.get(i);
-			Calendar cal1 = Calendar.getInstance();		
-			cal1.setTime(t.getDate());
-			Calendar cal2 = Calendar.getInstance();
-			cal2.setTime(new Date());
-			if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
-				if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
-					today++;			
-				}
-				if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
-					tomorrow++;			
-				}
-				if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
-					week++;			
-				}
-			}
-			total++;
-		}
-	}
+    /**
+    *    change count task
+    */
+    public void recount() {
+        today = 0;
+        tomorrow = 0;
+        week = 0;
+        total = 0;
+         for (int i = 0; i < info.size() ; i++) {
+            TaskInfo t = info.get(i);
+            Calendar cal1 = Calendar.getInstance();        
+            cal1.setTime(t.getDate());
+            Calendar cal2 = Calendar.getInstance();
+            cal2.setTime(new Date());
+            if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
+                if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
+                    today++;            
+                }
+                if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
+                    tomorrow++;            
+                }
+                if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
+                    week++;            
+                }
+            }
+            total++;
+        }
+    }
 
 }

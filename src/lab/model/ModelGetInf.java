@@ -10,5 +10,5 @@ public interface ModelGetInf {
     /**
     *    Returns task.
     */
-    public TaskInfo getTask(long id) throws BDException;
+    public TaskInfo getTask(long id) throws DataAccessException;
 }

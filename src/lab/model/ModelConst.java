@@ -1,4 +1,4 @@
 package lab.model;
-public interface ModelConst {
-	public String nameBD = "default.ndb";
+public class ModelConst {
+    public static final String nameBD = "default.ndb";
 }

@@ -13,32 +13,32 @@ public interface Bridge {
      * Remove task.
      * @param id remove task.
      */
-    public void removeTask(long id) throws BDException; 
+    public void removeTask(long id) throws DataAccessException; 
 
     /**
      * Add task
      */
 
-    public void addTask(TaskInfo task) throws BDException;
+    public void addTask(TaskInfo task) throws DataAccessException;
 
     /**
     * Get task from file.
     */
-    public TaskInfo getTask(long id) throws BDException;
+    public TaskInfo getTask(long id) throws DataAccessException;
      /**
      * Remove All task..
      */
-    public void removeAll() throws BDException; 
+    public void removeAll() throws DataAccessException; 
     /**
     * returns rows count
     */
-    public long getCountID() throws BDException; 
+    public long getCountID() throws DataAccessException; 
     /**
     * Load all tasks from file.
     */
-    public Hashtable<Long,TaskInfo> getAll() throws BDException;
+    public Hashtable<Long,TaskInfo> getAll() throws DataAccessException;
     /**
     * Edit task
     */
-    public void editTask(long id, TaskInfo task) throws BDException;
+    public void editTask(long id, TaskInfo task) throws DataAccessException;
 }

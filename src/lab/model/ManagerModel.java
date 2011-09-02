@@ -8,87 +8,88 @@ import lab.exception.*;
 
 public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.observer.Observer {
     private Bridge SQLBridge;
-	ArrayList<lab.model.observer.Observable> lisener = null;
+    ArrayList<lab.model.observer.Observable> lisener = null;
     private Hashtable<Long,TaskInfo> taskMap;
     private static class IDGenerator {
-		static long current = System.currentTimeMillis();
-		static public synchronized long get(){
-			return current++;
-		}
-	} 
-
-	public ManagerModel() {
-		lisener = new ArrayList<lab.model.observer.Observable>();
-        SQLBridge = SQLiteBridge.getInstance();
-        loadTask();
+        static long current = System.currentTimeMillis();
+        static public synchronized long get(){
+            return current++;
+        }
+    } 
+	/**
+    * Load task from BD.
+    */
+    private void loadTasks() throws DataAccessException {
+        try {
+            taskMap = SQLBridge.getAll();
+        } catch (DataAccessException e) {
+			throw new DataAccessException(e.getMessage(),e.getCause());
+        }
+    }
+    public ManagerModel() throws DataAccessException {
+        lisener = new ArrayList<lab.model.observer.Observable>();
+        try {
+			SQLBridge = new SQLiteBridge();        
+			loadTasks();
+		} catch (DataAccessException e) {
+			throw new DataAccessException(e.getMessage(),e.getCause());
+        }
     }
     /**
     * Add all observer end update information about tasks.
     */
     public void addObserver(lab.model.observer.Observable view) {
         lisener.add(view);
-		view.notifyGetAll(this);
+        view.notifyGetAll(this);
     }
-	public void removeObserver(lab.model.observer.Observable view) {
-		lisener.remove(view);
-	}
+    public void removeObserver(lab.model.observer.Observable view) {
+        lisener.remove(view);
+    }
     /**
-    * Load task from BD.
-    */
-    @SuppressWarnings("unchecked")
-    public void loadTask() {
-		try {
-			taskMap = SQLBridge.getAll();
-		} catch (BDException e) {
-			new ExceptionView("1 Can't load task");
-		}
-    }
-
-     /**
      * Remove task.
      * @param id remove task.
      */
-    public void removeTask(long id) throws BDException{
+    public void removeTask(long id) throws DataAccessException{
         try {
-			SQLBridge.removeTask(id);
-			taskMap.remove(id);
-			for (int i = 0; i <lisener.size(); i++ ) {
-				lisener.get(i).notifyRemove(id);
-			}
-		} catch (BDException e) {
-			throw new BDException(e.getMessage());
-		}
+            SQLBridge.removeTask(id);
+            taskMap.remove(id);
+            for (int i = 0; i <lisener.size(); i++ ) {
+                lisener.get(i).notifyRemove(id);
+            }
+        } catch (DataAccessException e) {
+            throw new DataAccessException(e.getMessage(),e.getCause());
+        }
     }
 
     /**
      * Add task
      */
     @SuppressWarnings("unchecked")
-    public void addTask(TaskInfo task) throws BDException{        
+    public void addTask(TaskInfo task) throws DataAccessException{        
         try {
-			task.setID(IDGenerator.get());
-			taskMap.put(task.getID(),task);
-			SQLBridge.addTask(task);
-			for (int i = 0; i <lisener.size(); i++ ) {
-				lisener.get(i).notifyAdd(task.getID());
-			}
-		} catch (BDException e) {
-			throw new BDException(e.getMessage());
-		}
+            task.setID(IDGenerator.get());
+            taskMap.put(task.getID(),task);
+            SQLBridge.addTask(task);
+            for (int i = 0; i <lisener.size(); i++ ) {
+                lisener.get(i).notifyAdd(task.getID());
+            }
+        } catch (DataAccessException e) {
+            throw new DataAccessException(e.getMessage(),e.getCause());
+        }
     }
     /**
     * Edit task
     */
-    public void editTask(long id, TaskInfo task) throws BDException {
+    public void editTask(long id, TaskInfo task) throws DataAccessException {
         try {
-			SQLBridge.editTask(id,task);
-			taskMap.put(id,task);
-			for (int i = 0; i <lisener.size(); i++ ) {
-				lisener.get(i).notifyEdit(id);
-			}
-		} catch (BDException e) {
-			throw new BDException(e.getMessage());
-		}
+            SQLBridge.editTask(id,task);
+            taskMap.put(id,task);
+            for (int i = 0; i <lisener.size(); i++ ) {
+                lisener.get(i).notifyEdit(id);
+            }
+        } catch (DataAccessException e) {
+            throw new DataAccessException(e.getMessage(),e.getCause());
+        }
     }
     /**
     *    Returns All tasks
@@ -100,12 +101,15 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     /**
     *    Returns task.
     */
-    public TaskInfo getTask(long id) throws BDException{
-        try {
-			return SQLBridge.getTask(id);
-		} catch (BDException e) {
-			throw new BDException(e.getMessage());
+    public TaskInfo getTask(long id) throws DataAccessException{
+        if (taskMap.containsKey(id)) {
+			return taskMap.get(id);
 		}
+		try {
+            return SQLBridge.getTask(id);
+        } catch (DataAccessException e) {
+            throw new DataAccessException(e.getMessage(),e.getCause());
+        }
     }
     
 }//end ManagerModel

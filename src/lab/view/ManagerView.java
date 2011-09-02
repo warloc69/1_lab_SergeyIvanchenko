@@ -14,7 +14,7 @@ import java.text.*;
  * Create user Interface
  */
 public class ManagerView extends JFrame implements lab.model.observer.Observable, Runnable {
-	private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ManagerView.class);
+    private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ManagerView.class);
     private Long id1 =-1l;
     private ManagerControllerInterface controller;
     private ModelGetInf mgi = null;
@@ -30,10 +30,10 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
     private JMenu menuCom = null;
     private JMenu menuAbout = null;
     private JMenu menuOpt = null;
-	private JLabel total = null;
-	private JLabel today = null;
-	private JLabel tomorrow = null;
-	private JLabel week = null;	
+    private JLabel total = null;
+    private JLabel today = null;
+    private JLabel tomorrow = null;
+    private JLabel week = null;    
     public static final long serialVersionUID = 123312332l;
     private class ExeFilter extends javax.swing.filechooser.FileFilter {
             public boolean accept(File f) {
@@ -101,10 +101,10 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                         long id = tableModel.getID(i[0]);
                         lastSelected = i[0];
                         try {
-							controller.delTask(id);
-						} catch (Exception e) {
-							new ExceptionView(e.getMessage());							
-						}
+                            controller.delTask(id);
+                        } catch (DataAccessException e) {
+                            viewError(e);                            
+                        }
                     }
                 }
             );
@@ -161,7 +161,6 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             setVisible(true);
         }
     }
-
     /**
     *    Show add / edit / view task dialog.
     */
@@ -207,37 +206,37 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         dateChooser.setToolTipText("Writes moment when task must run");
         dateChooser.setMaximumSize(new Dimension(110,30));
         boxName.add(Box.createRigidArea(new Dimension(10,30)));   
-		final Box b = Box.createHorizontalBox();
-		b.add(dateChooser);
+        final Box b = Box.createHorizontalBox();
+        b.add(dateChooser);
         boxName.add(b);
-		final JComboBox list = new JComboBox();
-		list.addItem("0.5");
-		list.addItem("1");
-		list.addItem("2");
-		list.addItem("5");
-		list.addItem("6");
-		list.addItem("10");
-		list.addItem("12");
-		list.addItem("15");
-		list.addItem("24");
-		list.setMaximumSize(new Dimension(45,30));
-		final JLabel h = new JLabel("H");
-		list.addActionListener(
+        final JComboBox list = new JComboBox();
+        list.addItem("0.5");
+        list.addItem("1");
+        list.addItem("2");
+        list.addItem("5");
+        list.addItem("6");
+        list.addItem("10");
+        list.addItem("12");
+        list.addItem("15");
+        list.addItem("24");
+        list.setMaximumSize(new Dimension(45,30));
+        final JLabel h = new JLabel("H");
+        list.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) { 
-					Double d = Double.parseDouble((String) list.getSelectedItem())*60;
+                    Double d = Double.parseDouble((String) list.getSelectedItem())*60;
                     Long l = d.longValue();
-					 int[] i = table.getSelectedRows();
-					if (i.length == 0) {return;}
-					id1 = tableModel.getID(i[0]);
-					lastSelected = i[0];
-					TaskInfo t1 =  tasks.get(id1);
-					dateChooser.setValue(new Date(t1.getDate().getTime()+l*1000*60));
+                     int[] i = table.getSelectedRows();
+                    if (i.length == 0) {return;}
+                    id1 = tableModel.getID(i[0]);
+                    lastSelected = i[0];
+                    TaskInfo t1 =  tasks.get(id1);
+                    dateChooser.setValue(new Date(t1.getDate().getTime()+l*1000*60));
                 }
             }
         );
-		boxName.add(list);
-		boxName.add(h);
+        boxName.add(list);
+        boxName.add(h);
         //----- JLabel file
         final JLabel lFile = new JLabel("Program:");
         //----- JChoose Execute file
@@ -249,8 +248,10 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 exefile.showOpenDialog(f);
-                lFile.setText(exefile.getSelectedFile().getPath());
-				lFile.setForeground(Color.BLACK);
+				if (exefile.getSelectedFile() != null ) {
+					lFile.setText(exefile.getSelectedFile().getPath());
+					lFile.setForeground(Color.BLACK);
+				}
             }
         });
         boxFile.add(Box.createRigidArea(new Dimension(10,30)));
@@ -291,7 +292,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 if (i.length == 0) {return;}
                 id1 = tableModel.getID(i[0]);
                 lastSelected = i[0];
-                TaskInfo t1 =  tasks.get(id1);
+                TaskInfo t1 =  tableModel.get(i[0]);
                 dateChooser.setValue(t1.getDate());
                 tname.setText(t1.getName());
                 tinfo.setText(t1.getInfo());
@@ -320,18 +321,18 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 }
                 if (command == 1) {
                     try {
-						controller.editTask(id1,ts);
-					} catch (Exception e) {
-						new ExceptionView(e.getMessage(),f);
-						return; 
-					} 
+                        controller.editTask(id1,ts);
+                    } catch (Exception e) {
+                        viewError(e);
+                        return; 
+                    } 
                 } else {
                    try {
-					   controller.addTask(ts);
-					} catch (Exception e) {
-						new ExceptionView(e.getMessage(),f);
-						return; 
-					}
+                       controller.addTask(ts);
+                    } catch (Exception e) {
+                        viewError(e);
+                        return; 
+                    }
                 }
                 f.dispose();
             }
@@ -357,8 +358,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             tinfo.setEnabled(false);
             dateChooser.setEnabled(false);
             boxFile.remove(bexefile);
-			boxName.remove(list);
-			boxName.remove(h);
+            boxName.remove(list);
+            boxName.remove(h);
         }
         allBoxes.add(boxName);
         allBoxes.add(Box.createRigidArea(new Dimension(10,10)));
@@ -369,14 +370,12 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         f.add(allBoxes);
         f.setVisible(true);
     }
-
     /**
      *    Show task Edit dialog.
      */
     private void viewEditTask(){
         viewAddTask(1);
     }
-
     /**
      *    Show task Edit dialog.
      */
@@ -387,36 +386,36 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
     *    Show execute dialog.
     */
     private void viewMassage(final TaskInfo ts) {
-		final Box boxName = Box.createHorizontalBox();
-		Box boxInfo = Box.createHorizontalBox();
-		Box boxFile = Box.createHorizontalBox();
-		Box boxButton = Box.createHorizontalBox();
-		Box allBoxes = Box.createVerticalBox();
-		start = false;
-		int W = Toolkit.getDefaultToolkit().getScreenSize().width;
-		int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;
-		final JSpinner dateChooser = new JSpinner(new SpinnerDateModel());
-		dateChooser.setValue(ts.getDate());
-		dateChooser.setMaximumSize(new Dimension(110,30));
-		final JComboBox list = new JComboBox();
-		list.addItem("0.5");
-		list.addItem("1");
-		list.addItem("2");
-		list.addItem("5");
-		list.addItem("6");
-		list.addItem("10");
-		list.addItem("12");
-		list.addItem("15");
-		list.addItem("24");
-		list.setMaximumSize(new Dimension(45,30));
-		final JLabel h = new JLabel("H");
-		list.addActionListener(
+        final Box boxName = Box.createHorizontalBox();
+        Box boxInfo = Box.createHorizontalBox();
+        Box boxFile = Box.createHorizontalBox();
+        Box boxButton = Box.createHorizontalBox();
+        Box allBoxes = Box.createVerticalBox();
+        start = false;
+        int W = Toolkit.getDefaultToolkit().getScreenSize().width;
+        int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;
+        final JSpinner dateChooser = new JSpinner(new SpinnerDateModel());
+        dateChooser.setValue(ts.getDate());
+        dateChooser.setMaximumSize(new Dimension(110,30));
+        final JComboBox list = new JComboBox();
+        list.addItem("0.5");
+        list.addItem("1");
+        list.addItem("2");
+        list.addItem("5");
+        list.addItem("6");
+        list.addItem("10");
+        list.addItem("12");
+        list.addItem("15");
+        list.addItem("24");
+        list.setMaximumSize(new Dimension(45,30));
+        final JLabel h = new JLabel("H");
+        list.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) { 
-					Double d = Double.parseDouble((String) list.getSelectedItem())*60;
+                    Double d = Double.parseDouble((String) list.getSelectedItem())*60;
                     Long l = d.longValue();
-					lastSelected = tableModel.getSelectedRow(ts);
-					dateChooser.setValue(new Date(ts.getDate().getTime()+l*1000*60));
+                    lastSelected = tableModel.getSelectedRow(ts);
+                    dateChooser.setValue(new Date(ts.getDate().getTime()+l*1000*60));
                 }
             }
         );
@@ -427,12 +426,12 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
                     lastSelected = tableModel.getSelectedRow(ts);
-					try {
-						controller.delTask(ts.getID());
-					} catch (Exception e) {
-					    new ExceptionView(e.getMessage(),msg);
-					}
-					msg.dispose();
+                    try {
+                        controller.delTask(ts.getID());
+                    } catch (DataAccessException e) {
+                        viewError(e);
+                    }
+                    msg.dispose();
                     loadView();
                 }
             }
@@ -450,11 +449,11 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         final JLabel linfo = new JLabel("Info:");
         //----- JTextArea Info
         final JTextArea tinfo = new JTextArea();
-		JScrollPane scrol = new JScrollPane(tinfo);
+        JScrollPane scrol = new JScrollPane(tinfo);
         boxInfo.add(scrol);
         tinfo.setText(ts.getInfo());
         tinfo.setEnabled(false);
-		boxName.add(Box.createRigidArea(new Dimension(10,30)));    
+        boxName.add(Box.createRigidArea(new Dimension(10,30)));    
         boxName.add(dateChooser);
         JButton ok = new JButton("Ok");  
         ok.addActionListener(
@@ -464,11 +463,11 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     ts.setDate((Date)dateChooser.getValue());
                     lastSelected = tableModel.getSelectedRow(ts);                    
                     try {
-						controller.editTask(ts.getID(),ts);
-					} catch (Exception e) {
-						new ExceptionView(e.getMessage(),msg);
-						return; 
-					}
+                        controller.editTask(ts.getID(),ts);
+                    } catch (Exception e) {
+                        viewError(e);
+                        return; 
+                    }
                     dateChooser.setEnabled(false);
                     msg.dispose();
                     return;
@@ -480,15 +479,17 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                             try {
                                 r.exec(ts.getExec().getPath());
                                 start = true;
-                            } catch (IOException e) {}
+                            } catch (IOException e) {
+								log.error("Runtime error");
+							}
                         }
                     }
                     lastSelected = tableModel.getSelectedRow(ts);    
                     try {
-						controller.delTask(ts.getID());
-					} catch (Exception e) {
-					    new ExceptionView(e.getMessage(),msg);
-					}
+                        controller.delTask(ts.getID());
+                    } catch (DataAccessException e) {
+                        viewError(e);
+                    }
                 }
                 msg.dispose();
                 
@@ -507,9 +508,9 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             new ActionListener() {
                 public void actionPerformed(ActionEvent event) {
                     dateChooser.setEnabled(true);
-					boxName.add(list);
-					boxName.add(h);
-					msg.setVisible(true);
+                    boxName.add(list);
+                    boxName.add(h);
+                    msg.setVisible(true);
                 }            
             });
         boxButton.add(cancel);
@@ -519,10 +520,12 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 try {
                     r.exec(ts.getExec().getPath());
                     start = true;
-                } catch (IOException e) {}
+                } catch (IOException e) {
+					log.error("Runtime error");
+				}
             }
         }
-		allBoxes.add(boxName);
+        allBoxes.add(boxName);
         allBoxes.add(Box.createRigidArea(new Dimension(10,10)));
         allBoxes.add(linfo, BorderLayout.WEST);        
         allBoxes.add(boxInfo);
@@ -570,28 +573,28 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         final JCheckBox check = new JCheckBox("Autorun program");
         check.setSelected(ViewVariable.autoRun);
         check.setToolTipText("Set, if you want to run executable program automaticly in the task.");
-		
+        
         JLabel l = new JLabel("Put off time:");
         JLabel m = new JLabel("Minits");
         final JTextField min = new JTextField();
         min.setText(ViewVariable.offTime+"");
-		final JComboBox list = new JComboBox();
-		list.addItem("0.5");
-		list.addItem("1");
-		list.addItem("2");
-		list.addItem("5");
-		list.addItem("6");
-		list.addItem("10");
-		list.addItem("12");
-		list.addItem("15");
-		list.addItem("24");
-		JLabel h = new JLabel("H");
-		list.addActionListener(
+        final JComboBox list = new JComboBox();
+        list.addItem("0.5");
+        list.addItem("1");
+        list.addItem("2");
+        list.addItem("5");
+        list.addItem("6");
+        list.addItem("10");
+        list.addItem("12");
+        list.addItem("15");
+        list.addItem("24");
+        JLabel h = new JLabel("H");
+        list.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) { 
-					Double d = Double.parseDouble((String) list.getSelectedItem());
+                    Double d = Double.parseDouble((String) list.getSelectedItem());
                     Integer i = d.intValue()*60;
-					min.setText(i.toString());
+                    min.setText(i.toString());
                 }
             }
         );
@@ -625,8 +628,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         b1.add(Box.createGlue());
         b1.add(min);
         b1.add(m);
-		b1.add(list);
-		b1.add(h);
+        b1.add(list);
+        b1.add(h);
         b.add(b1);
         b.add(check);
         b.add(b2);        
@@ -653,8 +656,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             ViewVariable.H = in.readInt();
             ViewVariable.W = in.readInt();
         } catch (IOException e) {
-			log.error("IO Exception, read option");
-		}
+            log.error("IO Exception, read option");
+        }
     }
     /**
     * Saves option into the file.
@@ -676,7 +679,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             out.flush();
             out.close();
         } catch (IOException e1){
-			log.error("IO Exception, write option");
+            log.error("IO Exception, write option");
         }
     }
     /**
@@ -708,14 +711,13 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
     public void setController(ManagerControllerInterface controller) {
         this.controller = controller;
     }
-    
     /**
      * Update informatio about tasks 
      * @param obj keep information about tasks
      */
     public void updateTable(){
          //------- Create JTable
-		if (table == null) {
+        if (table == null) {
             table = new JTable(tableModel);
             table.addMouseListener(
                 new MouseAdapter() {
@@ -727,71 +729,120 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 }
             );
             JScrollPane scr = new JScrollPane(table);
-			Box b = Box.createVerticalBox();
-			b.add(scr);
-			Box b1 = Box.createHorizontalBox();
-			b.add(b1);
-			total = new JLabel("TotalSize :" + tableModel.total); 
-			total.setMaximumSize(new Dimension(100,30));
-			b1.add(total);
-			today = new JLabel("  Today :" + tableModel.today);  //to do
-			today.setMaximumSize(new Dimension(100,30));
-			b1.add(today);
-			tomorrow = new JLabel("  Tomorrow :" + tableModel.tomorrow);  //to do
-			tomorrow.setMaximumSize(new Dimension(100,30));
-			b1.add(tomorrow);
-			week = new JLabel("  This week :" + tableModel.week);  //to do
-			week.setMaximumSize(new Dimension(100,30));
-			b1.add(week);
+            Box b = Box.createVerticalBox();
+            b.add(scr);
+            Box b1 = Box.createHorizontalBox();
+            b.add(b1);
+            total = new JLabel("TotalSize :" + tableModel.total); 
+            total.setMaximumSize(new Dimension(100,30));
+            b1.add(total);
+            today = new JLabel("  Today :" + tableModel.today);  //to do
+            today.setMaximumSize(new Dimension(100,30));
+            b1.add(today);
+            tomorrow = new JLabel("  Tomorrow :" + tableModel.tomorrow);  //to do
+            tomorrow.setMaximumSize(new Dimension(100,30));
+            b1.add(tomorrow);
+            week = new JLabel("  This week :" + tableModel.week);  //to do
+            week.setMaximumSize(new Dimension(100,30));
+            b1.add(week);
             pane.add(b);
         } else {
-			total.setText("TotalSize :" + tableModel.total);
-			today.setText("  Today :" + tableModel.today);
-			tomorrow.setText("  Tomorrow :" + tableModel.tomorrow);
-			week.setText("  This week :" + tableModel.week);
+            total.setText("TotalSize :" + tableModel.total);
+            today.setText("  Today :" + tableModel.today);
+            tomorrow.setText("  Tomorrow :" + tableModel.tomorrow);
+            week.setText("  This week :" + tableModel.week);
             tableModel.fireTableDataChanged();
         }
         loadView();
     }
-	/**
-	* update all task
-	*/
-	public void notifyGetAll(ModelGetInf inf) {
+    /**
+    * update all task
+    */
+    public void notifyGetAll(ModelGetInf inf) {
         mgi = inf;
-        tasks = mgi.getAllTasks();		
+        tasks = mgi.getAllTasks();        
         tableModel = new TableModel(tasks);
-		updateTable();
-	}
-	/**
-	* Add task into the table.
-	*/
-	public void notifyAdd(long id) {
-		try {
-			tasks.put(id,mgi.getTask(id));
-			tableModel.addTask(tasks.get(id));
-			updateTable();
-		} catch (Exception e) {
-		new ExceptionView(e.getMessage());
-		}
-	}
-	/**
-	* Edit task in the table.
-	*/
-	public void notifyEdit(long id) {
-		try {
-			tasks.put(id,mgi.getTask(id));
-			tableModel.editTask(lastSelected,tasks.get(id));
-			updateTable();
-			} catch (Exception e) {
-			new ExceptionView(e.getMessage());
-		}
-	}
-	/**
-	* Remove task from table.
-	*/
-	public void notifyRemove(long id) {
-        tasks.remove(id);		
+        updateTable();
+    }
+    /**
+    * Add task into the table.
+    */
+    public void notifyAdd(long id) {
+        try {
+            tasks.put(id,mgi.getTask(id));
+            tableModel.addTask(tasks.get(id));
+            updateTable();
+        } catch (Exception e) {
+			viewError(e);
+        }
+    }
+    /**
+    * Edit task in the table.
+    */
+    public void notifyEdit(long id) {
+        try {
+            tasks.put(id,mgi.getTask(id));
+            tableModel.editTask(lastSelected,tasks.get(id));
+            updateTable();
+        } catch (Exception e) {
+				viewError(e);
+        }
+    }
+    /**
+    * Remove task from table.
+    */
+    public void notifyRemove(long id) {
+        tasks.remove(id);        
         tableModel.removeTask(lastSelected);
-		updateTable();	
-	}
+        updateTable();    
+    }
+	private void viewError(Exception e) {        
+        Box boxName = Box.createHorizontalBox();
+		Box boxInfo = Box.createVerticalBox();
+        Box boxButton = Box.createHorizontalBox();
+        Box allBoxes = Box.createVerticalBox(); 
+        final JDialog dial = new JDialog(this, true);
+        dial.setTitle("Error!!!");
+        dial.setSize(300,100);
+        addWindowListener(
+            new WindowAdapter() {
+                public void windowClosing(WindowEvent we) {
+                   dial.dispose();
+				}
+			}
+        );
+        //----- JLabel name
+        final JLabel lname = new JLabel("info:");
+        boxName.add(lname);
+        //----- JTextField
+        final JTextField tname = new JTextField();
+        tname.setText(e.getMessage());
+        tname.setMaximumSize(new Dimension(250,30));        
+        boxName.add(tname);
+        tname.setEnabled(false);
+		//----- JLabel Info
+        final JLabel linfo = new JLabel("trace:");
+		boxInfo.add(linfo);
+        //----- JTextArea Info
+        final JTextArea tinfo = new JTextArea();
+        JScrollPane scrol = new JScrollPane(tinfo);        
+        tinfo.setText(e.getCause()+"");
+        tinfo.setEnabled(false);
+		boxInfo.add(scrol);
+        JButton ok = new JButton("Ok");
+        ok.setMaximumSize(new Dimension(50,30));
+        ok.addActionListener(
+        new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+                   dial.dispose();
+            }
+        });
+        boxButton.add(ok);
+        allBoxes.add(boxName);
+		allBoxes.add(boxInfo);
+        allBoxes.add(boxButton);
+        dial.add(allBoxes);
+        dial.setVisible(true);
+        dial.toFront();
+    }
 }//end ManagerView

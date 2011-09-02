@@ -8,21 +8,21 @@ public interface ManagerControllerInterface {
     /**
      * Add task
      */
-    public boolean addTask(TaskInfo task) throws BadTaskException, BDException ;
+    public void addTask(TaskInfo task) throws BadTaskException, DataAccessException ;
 
      /**
      * Remove task.
      * @param id remove task.
      */
-    public void delTask(long id)throws BDException ;
+    public void delTask(long id)throws DataAccessException ;
 
     /**
     * Edit task
     */
-    public boolean editTask(long id, TaskInfo task) throws BadTaskException, BDException ;
+    public void editTask(long id, TaskInfo task) throws BadTaskException, DataAccessException ;
     /**
     * insert model into controller.
     */
-    public void setModel(MannagerWrite model) throws BadTaskException, BDException ;
+    public void setModel(MannagerWrite model);
 
 }
