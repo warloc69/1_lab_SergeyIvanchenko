@@ -23,7 +23,9 @@ public class SQLiteBridge implements Bridge{
 			log.error(job.getError());
 			throw new DataAccessException("1 DataBase create table error",job.getError());
         } else {
-            log.info("open DataBase, create or open table");
+			if (log.isInfoEnabled()) {
+				log.info("open DataBase, create or open table");
+			}
         }
     }
     /**
@@ -50,7 +52,9 @@ public class SQLiteBridge implements Bridge{
             protected Integer job(SQLiteConnection connection) 
                 throws SQLiteException, DataAccessException {
                     connection.exec(command);
-                    log.info("DataBase, add task");
+					if (log.isInfoEnabled()) {
+						log.info("DataBase, add task");
+					}
                 return -1;
             }
         });
@@ -68,7 +72,9 @@ public class SQLiteBridge implements Bridge{
             protected Integer job(SQLiteConnection connection) 
                 throws SQLiteException {
                     connection.exec(command);
-                    log.info("DataBase, remove all task");
+					if (log.isInfoEnabled()) {
+						log.info("DataBase, remove all task");
+					}
                 return -1;
             }
         });
@@ -87,7 +93,9 @@ public class SQLiteBridge implements Bridge{
             protected Integer job(SQLiteConnection connection) 
                 throws SQLiteException {
                     connection.exec(command);
-                    log.info("DataBase, remove task");
+					if (log.isInfoEnabled()) {
+						log.info("DataBase, remove task");
+					}
                 return -1;
             }
         });
@@ -105,7 +113,9 @@ public class SQLiteBridge implements Bridge{
                 SQLiteStatement st = connection.prepare("SELECT COUNT(*) FROM tasks");
                 try {
                     st.step();
-                    log.info("DataBase, get count tasks");
+					if (log.isInfoEnabled()) {
+						log.info("DataBase, get count tasks");
+					}
                     return st.columnLong(0);
                 } finally {
                     st.dispose();
@@ -142,7 +152,9 @@ public class SQLiteBridge implements Bridge{
 								taskTemp.setExec(new File((String)st.columnValue(3)));
 							}
 							taskTemp.setDate(new Date((Long) st.columnValue(4)));
-							log.info("DataBase, get task");
+							if (log.isInfoEnabled()) {
+								log.info("DataBase, get task");
+							}
 							return taskTemp;
                         } else {
                             st.dispose();
@@ -194,7 +206,9 @@ public class SQLiteBridge implements Bridge{
                                 }
                             }
                         }
-                        log.info("DataBase, get all tasks");
+						if (log.isInfoEnabled()) {
+							log.info("DataBase, get all tasks");
+						}
                         return h;
                     } finally {
                         st.dispose();
@@ -229,7 +243,9 @@ public class SQLiteBridge implements Bridge{
             protected Integer job(SQLiteConnection connection) 
                 throws SQLiteException {
                     connection.exec(command);
-                    log.info("DataBase, edit task");
+					if (log.isInfoEnabled()) {
+						log.info("DataBase, edit task");
+					}
                 return -1;
             }
         });

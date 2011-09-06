@@ -20,20 +20,12 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     * Load task from BD.
     */
     private void loadTasks() throws DataAccessException {
-        try {
             taskMap = SQLBridge.getAll();
-        } catch (DataAccessException e) {
-			throw new DataAccessException(e.getMessage(),e.getCause());
-        }
     }
     public ManagerModel() throws DataAccessException {
         lisener = new ArrayList<lab.model.observer.Observable>();
-        try {
-			SQLBridge = new SQLiteBridge();        
-			loadTasks();
-		} catch (DataAccessException e) {
-			throw new DataAccessException(e.getMessage(),e.getCause());
-        }
+		SQLBridge = new SQLiteBridge();        
+		loadTasks();
     }
     /**
     * Add all observer end update information about tasks.
@@ -50,14 +42,10 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
      * @param id remove task.
      */
     public void removeTask(long id) throws DataAccessException{
-        try {
-            SQLBridge.removeTask(id);
-            taskMap.remove(id);
-            for (int i = 0; i <lisener.size(); i++ ) {
-                lisener.get(i).notifyRemove(id);
-            }
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
+        SQLBridge.removeTask(id);
+        taskMap.remove(id);
+        for (int i = 0; i <lisener.size(); i++ ) {
+            lisener.get(i).notifyRemove(id);
         }
     }
 
@@ -65,30 +53,22 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
      * Add task
      */
     @SuppressWarnings("unchecked")
-    public void addTask(TaskInfo task) throws DataAccessException{        
-        try {
-            task.setID(IDGenerator.get());
-            taskMap.put(task.getID(),task);
-            SQLBridge.addTask(task);
-            for (int i = 0; i <lisener.size(); i++ ) {
-                lisener.get(i).notifyAdd(task.getID());
-            }
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
+    public void addTask(TaskInfo task) throws DataAccessException{
+        task.setID(IDGenerator.get());
+        taskMap.put(task.getID(),task);
+        SQLBridge.addTask(task);
+        for (int i = 0; i <lisener.size(); i++ ) {
+            lisener.get(i).notifyAdd(task.getID());
         }
     }
     /**
     * Edit task
     */
     public void editTask(long id, TaskInfo task) throws DataAccessException {
-        try {
-            SQLBridge.editTask(id,task);
-            taskMap.put(id,task);
-            for (int i = 0; i <lisener.size(); i++ ) {
-                lisener.get(i).notifyEdit(id);
-            }
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
+        SQLBridge.editTask(id,task);
+        taskMap.put(id,task);
+        for (int i = 0; i <lisener.size(); i++ ) {
+            lisener.get(i).notifyEdit(id);
         }
     }
     /**
@@ -105,11 +85,7 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
         if (taskMap.containsKey(id)) {
 			return taskMap.get(id);
 		}
-		try {
-            return SQLBridge.getTask(id);
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
-        }
+        return SQLBridge.getTask(id);
     }
     
 }//end ManagerModel

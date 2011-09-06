@@ -5,7 +5,7 @@ import lab.*;
 import lab.exception.*;
 public class TaskManager{
     public static void main (String[] arrg){  
-        org.apache.log4j.BasicConfigurator.configure();
+        org.apache.log4j.PropertyConfigurator.configure("log\\log4j.properties");
         ManagerController cont = new ManagerController();
         ManagerView view = new ManagerView();
 		try {

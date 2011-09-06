@@ -80,7 +80,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             ImageIcon add = new ImageIcon("img\\add.png");
            final JMenuItem bAddtask = new JMenuItem("Add task",add);
            menuCom.add(bAddtask);
-            bAddtask.setToolTipText("Add new task");
+		   bAddtask.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A,InputEvent.CTRL_MASK));
+		   bAddtask.setToolTipText("Add new task");
             bAddtask.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent event) {
@@ -93,6 +94,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             JMenuItem bRemovetask = new JMenuItem("Remove task",remove);
             menuCom.add(bRemovetask);
             bRemovetask.setToolTipText("Remove selected task");
+			bRemovetask.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,InputEvent.CTRL_MASK));
             bRemovetask.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent event) {
@@ -112,6 +114,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             ImageIcon edit = new ImageIcon("img\\edit.png");
             final JMenuItem bEdittask = new JMenuItem("Edit task",edit);
             menuCom.add(bEdittask);
+			bEdittask.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E,InputEvent.CTRL_MASK));
             bEdittask.setToolTipText("Edit selected task");
             bEdittask.addActionListener(
                 new ActionListener() {
@@ -125,6 +128,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             final JMenuItem bViewtask = new JMenuItem("View task",view);
             menuCom.add(bViewtask);
             bViewtask.setToolTipText("View selected task");
+			bViewtask.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V,InputEvent.CTRL_MASK));
             bViewtask.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent event) {
@@ -150,6 +154,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             );
             final JMenuItem option = new JMenuItem("Option");
             menuOpt.add(option);
+			option.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,InputEvent.CTRL_MASK));
             option.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -274,7 +279,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 if (i.length == 0) {return;}
                 id1 = tableModel.getID(i[0]);
                 lastSelected = i[0];
-                TaskInfo t1 =  tasks.get(id1);
+                TaskInfo t1 =  tableModel.get(i[0]);
                 dateChooser.setValue(t1.getDate());
                 tname.setText(t1.getName());
                 tinfo.setText(t1.getInfo());
@@ -322,17 +327,23 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 if (command == 1) {
                     try {
                         controller.editTask(id1,ts);
-                    } catch (Exception e) {
+                    } catch (DataAccessException e) {
                         viewError(e);
-                        return; 
+                        System.exit(1);
+                    } catch (BadTaskException e) {
+                        viewError(e);
+                        return;
                     } 
                 } else {
                    try {
                        controller.addTask(ts);
-                    } catch (Exception e) {
+                    } catch (DataAccessException e) {
                         viewError(e);
-                        return; 
-                    }
+                        System.exit(1);
+                    } catch (BadTaskException e) {
+                        viewError(e);
+                        return;
+                    } 
                 }
                 f.dispose();
             }
@@ -464,10 +475,13 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     lastSelected = tableModel.getSelectedRow(ts);                    
                     try {
                         controller.editTask(ts.getID(),ts);
-                    } catch (Exception e) {
+                    } catch (DataAccessException e) {
                         viewError(e);
-                        return; 
-                    }
+                        System.exit(1);
+                    } catch (BadTaskException e) {
+                        viewError(e);
+                        return;
+                    } 
                     dateChooser.setEnabled(false);
                     msg.dispose();
                     return;
@@ -728,6 +742,45 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     }
                 }
             );
+		table.addKeyListener( 
+			new KeyAdapter() {
+				public void keyPressed(KeyEvent e) {
+					int com = e.getKeyCode();
+					if (e.isControlDown()) {
+						switch (com) {
+							case KeyEvent.VK_A: {
+								viewAddTask(0);
+								break;
+							}
+							case KeyEvent.VK_R: {
+								int[] i = table.getSelectedRows();
+								if (i.length == 0) {return;}
+								long id = tableModel.getID(i[0]);
+								lastSelected = i[0];
+								try {
+									controller.delTask(id);
+								} catch (DataAccessException e1) {
+									viewError(e1);                            
+								}
+								break;
+							}
+							case KeyEvent.VK_E: {
+								viewEditTask();
+								break;
+							}
+							case KeyEvent.VK_V: {
+								viewViewTask();
+								break;
+							}
+							case KeyEvent.VK_O: {
+								optionProgram();
+								break;
+							}
+						}
+					}
+				}
+			}
+		);
             JScrollPane scr = new JScrollPane(table);
             Box b = Box.createVerticalBox();
             b.add(scr);
@@ -772,7 +825,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             tasks.put(id,mgi.getTask(id));
             tableModel.addTask(tasks.get(id));
             updateTable();
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
 			viewError(e);
         }
     }
@@ -784,7 +837,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             tasks.put(id,mgi.getTask(id));
             tableModel.editTask(lastSelected,tasks.get(id));
             updateTable();
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
 				viewError(e);
         }
     }
@@ -796,7 +849,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         tableModel.removeTask(lastSelected);
         updateTable();    
     }
-	private void viewError(Exception e) {        
+	private void viewError(Exception e) {
         Box boxName = Box.createHorizontalBox();
 		Box boxInfo = Box.createVerticalBox();
         Box boxButton = Box.createHorizontalBox();

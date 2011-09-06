@@ -36,23 +36,16 @@ public class ManagerController implements ManagerControllerInterface {
 		} catch (BadTaskException e) {
             throw new BadTaskException(e.getMessage(),e.getCause());
         }
-		try {
-            model.addTask(task);                
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
-        }
+		model.addTask(task);                
+        
     }
 
      /**
      * Remove task.
      * @param id remove task.
      */
-    public void delTask(long id) throws DataAccessException {        
-        try {
-            model.removeTask(id);
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
-        }
+    public void delTask(long id) throws DataAccessException {
+        model.removeTask(id);
     }
 
     /**
@@ -63,12 +56,9 @@ public class ManagerController implements ManagerControllerInterface {
             taskValidation(task);
         } catch (BadTaskException e) {
             throw new BadTaskException(e.getMessage(),e.getCause());
-        }
-		try {      
-			model.editTask(id,task);
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e.getMessage(),e.getCause());
-        }
+        }      
+		model.editTask(id,task);
+        
     }
     /**
     * insert model into controller.
