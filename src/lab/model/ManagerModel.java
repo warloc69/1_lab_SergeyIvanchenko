@@ -5,27 +5,37 @@ import lab.model.bridge.*;
 import lab.view.*;
 import java.io.*;
 import lab.exception.*;
-
+/**
+ * Class Create model for the Task Manager
+ */
 public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.observer.Observer {
-    private Bridge SQLBridge;
-    ArrayList<lab.model.observer.Observable> lisener = null;
+    private Bridge sqlBridge;
+    private ArrayList<lab.model.observer.Observable> lisener = null;
     private Hashtable<Long,TaskInfo> taskMap;
+    /**
+    *    It's private class generates id for the task.
+    */
     private static class IDGenerator {
         static long current = System.currentTimeMillis();
         static public synchronized long get(){
             return current++;
         }
     } 
-	/**
-    * Load task from BD.
+    /**
+    * Load task from BD
+    * @throws DataAccessException if we can't have access to Data Base.
     */
     private void loadTasks() throws DataAccessException {
-            taskMap = SQLBridge.getAll();
+            taskMap = sqlBridge.getAll();
     }
+    /**
+    * Constructor create model object.
+    * @throws DataAccessException if we can't have access to Data Base.
+    */
     public ManagerModel() throws DataAccessException {
         lisener = new ArrayList<lab.model.observer.Observable>();
-		SQLBridge = new SQLiteBridge();        
-		loadTasks();
+        sqlBridge = new SQLiteBridge();        
+        loadTasks();
     }
     /**
     * Add all observer end update information about tasks.
@@ -34,15 +44,19 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
         lisener.add(view);
         view.notifyGetAll(this);
     }
+    /**
+    * Remove observer.
+    */
     public void removeObserver(lab.model.observer.Observable view) {
         lisener.remove(view);
     }
     /**
      * Remove task.
      * @param id remove task.
+     * @throws DataAccessException if we can't have access to Data Base.
      */
     public void removeTask(long id) throws DataAccessException{
-        SQLBridge.removeTask(id);
+        sqlBridge.removeTask(id);
         taskMap.remove(id);
         for (int i = 0; i <lisener.size(); i++ ) {
             lisener.get(i).notifyRemove(id);
@@ -51,21 +65,22 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
 
     /**
      * Add task
+     * @throws DataAccessException if we can't have access to Data Base.
      */
-    @SuppressWarnings("unchecked")
     public void addTask(TaskInfo task) throws DataAccessException{
         task.setID(IDGenerator.get());
-        taskMap.put(task.getID(),task);
-        SQLBridge.addTask(task);
+        sqlBridge.addTask(task);
+        taskMap.put(task.getID(),task);        
         for (int i = 0; i <lisener.size(); i++ ) {
             lisener.get(i).notifyAdd(task.getID());
         }
     }
     /**
     * Edit task
+    * @throws DataAccessException if we can't have access to Data Base.
     */
     public void editTask(long id, TaskInfo task) throws DataAccessException {
-        SQLBridge.editTask(id,task);
+        sqlBridge.editTask(id,task);
         taskMap.put(id,task);
         for (int i = 0; i <lisener.size(); i++ ) {
             lisener.get(i).notifyEdit(id);
@@ -80,12 +95,13 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     }
     /**
     *    Returns task.
+    * @throws DataAccessException if we can't have access to Data Base.
     */
     public TaskInfo getTask(long id) throws DataAccessException{
         if (taskMap.containsKey(id)) {
-			return taskMap.get(id);
-		}
-        return SQLBridge.getTask(id);
+            return taskMap.get(id);
+        }
+        return sqlBridge.getTask(id);
     }
     
 }//end ManagerModel

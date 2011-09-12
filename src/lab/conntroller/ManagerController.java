@@ -3,12 +3,14 @@ import lab.model.MannagerWrite;
 import lab.*;
 import java.util.Date;
 import lab.exception.*;
-
+/**
+*  Class creates object controlling change in the model.
+*/
 public class ManagerController implements ManagerControllerInterface {
-
     private MannagerWrite model;
-	/**
+    /**
     * validation task.
+    * throws BadTaskException if task is invalide.
     */
     private void taskValidation (TaskInfo task) throws BadTaskException {
         if (task.getDate().before(new Date())) {
@@ -20,29 +22,24 @@ public class ManagerController implements ManagerControllerInterface {
                 throw new BadTaskException("Chouse file incorrect");
             }
         }
-    }
-	/**
-	* constructor
-	*/
-    public ManagerController(){
-
+        if (task.getName().length() == 0) {
+            throw new BadTaskException("Name incorrect");
+        }
     }
     /**
      * Add task
+     * @throws DataAccessException if we can't have access to Data Base.
+     * throws BadTaskException if task is invalide.
      */
     public void addTask(TaskInfo task) throws BadTaskException, DataAccessException{
-        try { 
-            taskValidation(task);
-		} catch (BadTaskException e) {
-            throw new BadTaskException(e.getMessage(),e.getCause());
-        }
-		model.addTask(task);                
+        taskValidation(task);
+        model.addTask(task);                
         
     }
-
      /**
      * Remove task.
      * @param id remove task.
+     * @throws DataAccessException if we can't have access to Data Base.
      */
     public void delTask(long id) throws DataAccessException {
         model.removeTask(id);
@@ -50,15 +47,12 @@ public class ManagerController implements ManagerControllerInterface {
 
     /**
     * Edit task
+    * @throws DataAccessException if we can't have access to Data Base.
+    * throws BadTaskException if task is invalide.
     */
     public void editTask(long id, TaskInfo task) throws BadTaskException, DataAccessException{
-        try {
-            taskValidation(task);
-        } catch (BadTaskException e) {
-            throw new BadTaskException(e.getMessage(),e.getCause());
-        }      
-		model.editTask(id,task);
-        
+        taskValidation(task);     
+        model.editTask(id,task);        
     }
     /**
     * insert model into controller.

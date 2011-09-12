@@ -1,6 +1,14 @@
 package lab.model.observer;
-
-public interface Observer {	
+/**
+* list observer method.
+*/
+public interface Observer {    
+    /**
+    * add observer
+    */
     public void addObserver(lab.model.observer.Observable view);
+    /**
+    * remove observer
+    */
     public void removeObserver(lab.model.observer.Observable view);
 }

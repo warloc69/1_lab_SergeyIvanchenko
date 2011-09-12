@@ -2,33 +2,25 @@ package lab.view;
 import java.util.*;
 import lab.TaskInfo;
 import javax.swing.table.*;
+import java.util.Collections.*;
 /**
-*    This class create TableModel.
+*    This class creates TableModel.
 */
 public class TableModel extends AbstractTableModel {
-    ArrayList<TaskInfo> info = null; 
+    private ArrayList<TaskInfo> info = null; 
     public static final long serialVersionUID = 213123123123l;
     public int total = 0;
     public int today = 0;
     public int tomorrow = 0;
     public int week = 0;
+    /**
+    *    Constructor creates TableModel's object and add task list into
+    *    the table.
+    */
     public TableModel(Hashtable<Long,TaskInfo> table) {
         info = new ArrayList<TaskInfo>(table.values());
-        sort();
+        Collections.sort(info);
         recount();
-    }
-    /**
-    *    This method sort table.
-    */
-    public void sort() {        
-        for (int j = 0; j < info.size(); j++)
-            for (int i = 0; i < info.size(); i++) {
-                if (info.get(j).getDate().getTime() < info.get(i).getDate().getTime()) {
-                   TaskInfo temp = info.get(j);
-                   info.set(j, info.get(i));
-                   info.set(i, temp);
-                }
-            }
     }
     /**
     * Returns the row's count.
@@ -95,7 +87,7 @@ public class TableModel extends AbstractTableModel {
         return "";            
     }
     /**
-    * Disabled row edit.
+    * Disabled rows edit.
     */
     public boolean isCellEditable(int row, int column) {
         return false;
@@ -126,27 +118,30 @@ public class TableModel extends AbstractTableModel {
             }
         }
         total++;
-        for (int i = 0; i < info.size(); i++) {
-            if (t.getDate().getTime() < info.get(i).getDate().getTime()) {
+        int i = 0;
+        for (TaskInfo ts: info) {
+            if (t.getDate().getTime() < ts.getDate().getTime()) {
                 info.add(i,t);
                 return;
-                }
             }
-        info.add(t);
+            i++;
+        }
+        info.add(t);        
     }
     /**
     * edit the table rows.
     */
     public void editTask(int id, TaskInfo t) {
-            info.set(id,t);
-            recount();
+        info.set(id,t);
+        Collections.sort(info);
+        recount();
     }
-	/**
-	*return task;
-	*/
-	public TaskInfo get(int r) {
-		return info.get(r);
-	}
+    /**
+    * return task;
+    */
+    public TaskInfo get(int r) {
+        return info.get(r);
+    }
     /**
     * Returns the selected row.
     */
@@ -181,15 +176,14 @@ public class TableModel extends AbstractTableModel {
         info.remove(id);
     }
     /**
-    *    change count task
+    *    change info about count task
     */
     public void recount() {
         today = 0;
         tomorrow = 0;
         week = 0;
         total = 0;
-         for (int i = 0; i < info.size() ; i++) {
-            TaskInfo t = info.get(i);
+         for (TaskInfo t: info) {
             Calendar cal1 = Calendar.getInstance();        
             cal1.setTime(t.getDate());
             Calendar cal2 = Calendar.getInstance();

@@ -1,4 +1,7 @@
 package lab.view;
+/**
+* This class list variable for the View.
+*/
 class ViewVariable {
     public static boolean autoRun = false;
     public static int H = 500;
