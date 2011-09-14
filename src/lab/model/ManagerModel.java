@@ -58,8 +58,8 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     public void removeTask(long id) throws DataAccessException{
         sqlBridge.removeTask(id);
         taskMap.remove(id);
-        for (int i = 0; i <lisener.size(); i++ ) {
-            lisener.get(i).notifyRemove(id);
+        for (lab.model.observer.Observable obs : lisener) {
+            obs.notifyRemove(id);
         }
     }
 
@@ -71,8 +71,8 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
         task.setID(IDGenerator.get());
         sqlBridge.addTask(task);
         taskMap.put(task.getID(),task);        
-        for (int i = 0; i <lisener.size(); i++ ) {
-            lisener.get(i).notifyAdd(task.getID());
+        for (lab.model.observer.Observable obs : lisener) {
+            obs.notifyAdd(task.getID());
         }
     }
     /**
@@ -82,8 +82,8 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     public void editTask(long id, TaskInfo task) throws DataAccessException {
         sqlBridge.editTask(id,task);
         taskMap.put(id,task);
-        for (int i = 0; i <lisener.size(); i++ ) {
-            lisener.get(i).notifyEdit(id);
+       for (lab.model.observer.Observable obs : lisener) {
+            obs.notifyEdit(id);
         }
     }
     /**

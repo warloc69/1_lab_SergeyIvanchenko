@@ -102,31 +102,9 @@ public class TableModel extends AbstractTableModel {
     * add task to the table.
     */
     public void addTask(TaskInfo t) {
-        Calendar cal1 = Calendar.getInstance();        
-        cal1.setTime(t.getDate());
-        Calendar cal2 = Calendar.getInstance();
-        cal2.setTime(new Date());
-        if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
-            if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
-                today++;            
-            }
-            if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
-                tomorrow++;            
-            }
-            if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
-                week++;            
-            }
-        }
-        total++;
-        int i = 0;
-        for (TaskInfo ts: info) {
-            if (t.getDate().getTime() < ts.getDate().getTime()) {
-                info.add(i,t);
-                return;
-            }
-            i++;
-        }
-        info.add(t);        
+        info.add(t);
+		Collections.sort(info); 
+		recount();
     }
     /**
     * edit the table rows.
@@ -146,34 +124,22 @@ public class TableModel extends AbstractTableModel {
     * Returns the selected row.
     */
     public int getSelectedRow (TaskInfo t) {
-        for (int i = 0; i < info.size() ; i++) {
-            if( info.get(i).getID() == t.getID()) {
+        int i = 0;
+		for (TaskInfo ts: info) {
+            if( ts.getID() == t.getID()) {
                 return i;
             }
+			i++;
         }
         return -1;
     }
     /**
     * Remove the task from table.
     */
-    public void removeTask(int id) {
-        Calendar cal1 = Calendar.getInstance();        
-        cal1.setTime(info.get(id).getDate());
-        Calendar cal2 = Calendar.getInstance();
-        cal2.setTime(new Date());
-        if (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) {
-            if (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)) {
-                today--;            
-            }
-            if ((cal1.get(Calendar.DAY_OF_MONTH) - cal2.get(Calendar.DAY_OF_MONTH)) == 1) {
-                tomorrow--;            
-            }
-            if (cal1.get(Calendar.WEEK_OF_YEAR) == cal2.get(Calendar.WEEK_OF_YEAR)) {
-                week--;            
-            }
-        }
-        total--;
+    public void removeTask(int id) {		
         info.remove(id);
+		Collections.sort(info);
+		recount();
     }
     /**
     *    change info about count task

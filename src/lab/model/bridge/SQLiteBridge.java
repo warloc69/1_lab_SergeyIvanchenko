@@ -184,28 +184,23 @@ public class SQLiteBridge implements Bridge{
                     SQLiteStatement st = connection.prepare("SELECT * FROM tasks");
                     try {
                         Hashtable<Long,TaskInfo> h = new Hashtable<Long,TaskInfo>();
-                        while (true) { 
-                            if (!st.step()) {
+                        while (st.step()) { 
+                            TaskInfo taskTemp = new TaskInfoImpl();
+                            if (st.hasRow()) {                                    
+                                taskTemp.setID((Long)st.columnValue(0));
+                                taskTemp.setName((String)st.columnValue(1));
+                                taskTemp.setInfo((String)st.columnValue(2));
+                                String s = (String)st.columnValue(3);
+                                if ("null".equals(s)) {
+                                    taskTemp.setExec(null);
+                                } else {
+                                    taskTemp.setExec(new File(s));
+                                }
+                                taskTemp.setDate(new Date((Long) st.columnValue(4)));
+                                h.put(taskTemp.getID(),taskTemp);
+                            } else {
                                 st.dispose();
                                 break;
-                            } else {
-                                TaskInfo taskTemp = new TaskInfoImpl();
-                                if (st.hasRow()) {                                    
-                                    taskTemp.setID((Long)st.columnValue(0));
-                                    taskTemp.setName((String)st.columnValue(1));
-                                    taskTemp.setInfo((String)st.columnValue(2));
-                                    String s = (String)st.columnValue(3);
-                                    if ("null".equals(s)) {
-                                        taskTemp.setExec(null);
-                                    } else {
-                                        taskTemp.setExec(new File(s));
-                                    }
-                                    taskTemp.setDate(new Date((Long) st.columnValue(4)));
-                                    h.put(taskTemp.getID(),taskTemp);
-                                } else {
-                                    st.dispose();
-                                    break;
-                                }
                             }
                         }
                         return h;

@@ -112,7 +112,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                         try {
                             controller.delTask(id);
                         } catch (DataAccessException e) {
-                            JOptionPane.showMessageDialog(ManagerView.this, e,"Error",JOptionPane.ERROR_MESSAGE);                    
+							log.error(e);
+                            JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);                    
                         }
                     }
                 }
@@ -338,20 +339,24 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     try {
                         controller.editTask(id1,ts);
                     } catch (DataAccessException e) {
-                        JOptionPane.showMessageDialog(ManagerView.this, e,"Error",JOptionPane.ERROR_MESSAGE);
+						log.error(e);
+                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
                         System.exit(1);
                     } catch (BadTaskException e) {
-                        JOptionPane.showMessageDialog(ManagerView.this, e,"Warning",JOptionPane.WARNING_MESSAGE);
+						log.warn(e);
+                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Warning",JOptionPane.WARNING_MESSAGE);
                         return;
                     } 
                 } else {
                    try {
                        controller.addTask(ts);
                     } catch (DataAccessException e) {
-                        JOptionPane.showMessageDialog(ManagerView.this, e,"Error",JOptionPane.ERROR_MESSAGE);
+						log.error(e);
+                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
                         System.exit(1);
                     } catch (BadTaskException e) {
-                        JOptionPane.showMessageDialog(ManagerView.this, e,"Warning",JOptionPane.WARNING_MESSAGE);
+						log.warn(e);
+                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Warning",JOptionPane.WARNING_MESSAGE);
                         return;
                     } 
                 }
@@ -450,7 +455,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     try {
                         controller.delTask(ts.getID());
                     } catch (DataAccessException e) {
-                        JOptionPane.showMessageDialog(msg, e,"Error",JOptionPane.ERROR_MESSAGE);
+						log.error(e);
+                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
                     }
                     msg.dispose();
                     loadView();
@@ -490,10 +496,12 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     try {
                         controller.editTask(ts.getID(),ts);
                     } catch (DataAccessException e) {
-                        JOptionPane.showMessageDialog(msg, e,"Error",JOptionPane.ERROR_MESSAGE);
+						log.error(e);
+                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
                         System.exit(1);
                     } catch (BadTaskException e) {
-                        JOptionPane.showMessageDialog(msg, e,"Warning",JOptionPane.WARNING_MESSAGE);
+						log.warn(e);
+                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Warning",JOptionPane.WARNING_MESSAGE);
                         return;
                     } 
                     dateChooser.setEnabled(false);
@@ -516,7 +524,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     try {
                         controller.delTask(ts.getID());
                     } catch (DataAccessException e) {
-                        JOptionPane.showMessageDialog(msg, e,"Error",JOptionPane.ERROR_MESSAGE);
+						log.error(e);
+                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
                     }
                 }
                 msg.dispose();
@@ -573,13 +582,10 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         Border e = BorderFactory.createMatteBorder(10,10,10,10,Color.BLUE);
         aboutD.setSize(400,400);
         StringBuilder sb = new StringBuilder();
-        sb.append("\n\n    Эта программа распостраняется как есть."+"\n");
-        sb.append("    Автор не несет ответственности за возможные"+"\n");
-        sb.append("    сбои в работе компютера связаные с работой"+"\n");
-        sb.append("    данной программы, за случайное "+"\n");
-        sb.append("    форматирование жосткого диска и утерю ");
-        sb.append("информации."+"\n");
-        sb.append("\n\n\n    Подвал-Холдинг, мы глючим для Вас :)");
+        sb.append("\n\n    Task Manager"+"\n");
+        sb.append("    Version 1.0"+"\n");
+        sb.append("    Author: Sergey Ivanchenko"+"\n");
+		sb.append("    This program is free software."+"\n");
         JTextArea aboutL = new JTextArea(sb.toString());
         b.add(aboutL);
         aboutL.setBorder(e);
@@ -619,8 +625,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         list.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) { 
-                    Double d = Double.parseDouble((String) list.getSelectedItem());
-                    Integer i = d.intValue()*60;
+                    Double d = Double.parseDouble((String) list.getSelectedItem())*60.;
+                    Integer i = d.intValue();
                     min.setText(i.toString());
                 }
             }
@@ -634,8 +640,6 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                         ViewVariable.W = getSize().width;
                     try {
                         ViewVariable.offTime = Integer.parseInt(min.getText());
-                    } catch (ClassCastException e2) {
-                        return;
                     } catch (NumberFormatException e3) {
                         return;
                     }
@@ -807,6 +811,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
     }
     /**
     * Add task into the table.
+	* @param id task id.
     */
     public void notifyAdd(long id) {
         try {
@@ -814,11 +819,13 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             tableModel.addTask(tasks.get(id));
             updateTable();
         } catch (DataAccessException e) {
-            JOptionPane.showMessageDialog(this, e,"Error",JOptionPane.ERROR_MESSAGE);
+			log.error(e);
+            JOptionPane.showMessageDialog(this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
         }
     }
     /**
     * Edit task in the table.
+	* @param id task id.
     */
     public void notifyEdit(long id) {
         try {
@@ -826,11 +833,13 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             tableModel.editTask(lastSelected,tasks.get(id));
             updateTable();
         } catch (DataAccessException e) {
-            JOptionPane.showMessageDialog(this, e,"Error",JOptionPane.ERROR_MESSAGE);
+			log.error(e);
+            JOptionPane.showMessageDialog(this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
         }
     }
     /**
     * Remove task from table.
+	* @param id task id.
     */
     public void notifyRemove(long id) {
         tasks.remove(id);        
