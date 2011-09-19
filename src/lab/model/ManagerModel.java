@@ -39,6 +39,7 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     }
     /**
     * Add all observer end update information about tasks.
+    * @param view Observer adding.
     */
     public void addObserver(lab.model.observer.Observable view) {
         lisener.add(view);
@@ -46,13 +47,14 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     }
     /**
     * Remove observer.
+    * @param view Observer removing
     */
     public void removeObserver(lab.model.observer.Observable view) {
         lisener.remove(view);
     }
     /**
      * Remove task.
-     * @param id remove task.
+     * @param id id removing task.
      * @throws DataAccessException if we can't have access to Data Base.
      */
     public void removeTask(long id) throws DataAccessException{
@@ -62,9 +64,9 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
             obs.notifyRemove(id);
         }
     }
-
     /**
      * Add task
+     * @param task reference on the adding task.
      * @throws DataAccessException if we can't have access to Data Base.
      */
     public void addTask(TaskInfo task) throws DataAccessException{
@@ -77,6 +79,8 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     }
     /**
     * Edit task
+    * @param task reference on the edit task.
+    * @param id id edits task.
     * @throws DataAccessException if we can't have access to Data Base.
     */
     public void editTask(long id, TaskInfo task) throws DataAccessException {
@@ -89,12 +93,13 @@ public class ManagerModel implements  MannagerWrite, ModelGetInf, lab.model.obse
     /**
     *    Returns All tasks
     */
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
     public Hashtable<Long,TaskInfo> getAllTasks() {
         return (Hashtable<Long,TaskInfo>) taskMap.clone();
     }
     /**
     *    Returns task.
+    * @param id id returning task.
     * @throws DataAccessException if we can't have access to Data Base.
     */
     public TaskInfo getTask(long id) throws DataAccessException{

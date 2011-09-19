@@ -14,59 +14,61 @@ import javax.swing.JOptionPane.*;
 /**
  * Class Create user Interface
  */
-public class ManagerView extends JFrame implements lab.model.observer.Observable, Runnable {
+public class ManagerView extends JFrame implements lab.model.observer.Observable {
     private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(ManagerView.class);
-    private Long id1 =-1l;
     private ManagerControllerInterface controller;
     private ModelGetInf mgi = null;
     private Container pane = null;
     private int loadFirstView = 0;
-    private TableModel tableModel;
-    private int lastSelected = -1;
-    private boolean start = false;    
-    private JTable table = null;
-    private Hashtable<Long,TaskInfo> tasks = null;
-    private Thread thread = null;
-    private JMenuBar menuBar = null;
-    private JMenu menuCom = null;
-    private JMenu menuAbout = null;
-    private JMenu menuOpt = null;
+    private TableModel tableModel;  
+    private JTable table = new JTable();
+    private JMenuBar menuBar = new JMenuBar();
+    private JMenu menuCom = new JMenu("Command");
+    private JMenu menuAbout = new JMenu("About");
+    private JMenu menuOpt = new JMenu("Option");
     private JLabel total = null;
     private JLabel today = null;
     private JLabel tomorrow = null;
     private JLabel week = null;    
     public static final long serialVersionUID = 123312332l;
-    /**
-    *    It's private class helps to show only programs
-    */
-    private class ExeFilter extends javax.swing.filechooser.FileFilter {
-            public boolean accept(File f) {
-                return f.getName().toLowerCase().endsWith(".exe") ||
-                    f.isDirectory();
-            }
-            public String getDescription() {
-                return "Program";
+    private class Notifier implements Runnable {
+        private Thread thread = null;
+        public Notifier() {
+            thread = new Thread(this);
+            thread.setDaemon(true);
+            thread.start();
+        }
+        /**
+        *    Create new thread look in all tasks, 
+        *     and chooses the task for execution. 
+        */
+        public void run() {
+            while (true) {    
+                try {
+                    thread.sleep(1000);
+                } catch (InterruptedException e) {}
+                if ((tableModel != null) && (tableModel.getRowCount() != 0)) {
+                    if (tableModel.get(0) != null) {                   
+                        if (tableModel.get(0).getDate().getTime() <= (new Date().getTime()+ViewVariable.offTime*1000*60)) {
+                            new TaskNotificationWindow(ManagerView.this,controller,tableModel.get(0));
+                        }
+                    }
+                }
             }
         }
+    }
     /**
     *    Constructor creates ManagerView's object.
     */
-    public ManagerView(){ 
-        menuBar = new JMenuBar();
+    public ManagerView() { 
         setJMenuBar(menuBar);
-        menuCom = new JMenu("Command");
         menuBar.add(menuCom);
-        menuOpt = new JMenu("Option");
         menuBar.add(menuOpt);
-        menuAbout = new JMenu("About");
         menuBar.add(menuAbout);
         pane = getContentPane();
         setTitle("Task Manager");
         loadOption();
         setSize(ViewVariable.W,ViewVariable.H);
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
         addWindowListener(
             new WindowAdapter() {
                 public void windowClosing(WindowEvent we) {
@@ -76,13 +78,56 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                 }
             }
         );
+        loadView();
+        new Notifier();
     }
     /**
     *    Load all swing element.
     */
-    private void loadView(){
-        if (loadFirstView != 1) {
-            loadFirstView = 1;
+    private void loadView() {
+       //------- Create JTable
+            table.addMouseListener(
+                new MouseAdapter() {
+                    public void mouseClicked(MouseEvent e) {
+                        if (e.getClickCount() == 2) {
+                            viewEditTask();
+                        }
+                    }
+                }
+            );
+        table.addKeyListener( 
+            new KeyAdapter() {
+                public void keyPressed(KeyEvent e) {
+                    int com = e.getKeyCode();
+                    if (e.isControlDown()) {
+                        switch (com) {
+                            case KeyEvent.VK_V: {
+                                viewViewTask();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        );
+            JScrollPane scr = new JScrollPane(table);
+            Box b = Box.createVerticalBox();
+            b.add(scr);
+            Box b1 = Box.createHorizontalBox();
+            b.add(b1);
+            total = new JLabel("TotalSize :" + 0); 
+            total.setMaximumSize(new Dimension(100,30));
+            b1.add(total);
+            today = new JLabel("  Today :" + 0);
+            today.setMaximumSize(new Dimension(100,30));
+            b1.add(today);
+            tomorrow = new JLabel("  Tomorrow :" + 0);
+            tomorrow.setMaximumSize(new Dimension(100,30));
+            b1.add(tomorrow);
+            week = new JLabel("  This week :" + 0);
+            week.setMaximumSize(new Dimension(100,30));
+            b1.add(week);
+            pane.add(b);
             //------- Menu item New Task
             ImageIcon add = new ImageIcon("img\\add.png");
            final JMenuItem bAddtask = new JMenuItem("New task",add);
@@ -92,7 +137,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
             bAddtask.addActionListener(
                 new ActionListener() {
                     public void actionPerformed(ActionEvent event) {
-                        viewAddTask(0);
+                        new TaskWindow(ManagerView.this,controller);
                     }
                 }
             );
@@ -108,11 +153,10 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                         int[] i = table.getSelectedRows();
                         if (i.length == 0) {return;}
                         long id = tableModel.getID(i[0]);
-                        lastSelected = i[0];
                         try {
                             controller.delTask(id);
                         } catch (DataAccessException e) {
-							log.error(e);
+                            log.error(e);
                             JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);                    
                         }
                     }
@@ -172,404 +216,24 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
                     optionProgram();
                 }
             }
-            );
-            
+            );            
             setVisible(true);
-        }
     }
-    /**
-    *    Show add / edit / view task dialog.
-    */
-    private void viewAddTask(final int command){
-        int W = 1024;
-        int H = 600;  
-        final JDialog f = new JDialog(this, true);
-        Box boxName = Box.createHorizontalBox();
-        Box boxInfo = Box.createHorizontalBox();
-        Box boxFile = Box.createHorizontalBox();
-        Box boxButton = Box.createHorizontalBox();
-        Box allBoxes = Box.createVerticalBox();
-        f.setSize(W/2,H/2);
-        f.setBounds(W/4,H/4,W/2,H/2);
-        f.addWindowListener(
-            new WindowAdapter() {
-                public void windowClosing(WindowEvent we) {
-                    f.dispose();
-                    loadView();
-                }
-            }
-        );
-        //----- JLabel name
-        final JLabel lname = new JLabel("Name:");
-        boxName.add(lname);
-        //----- JTextField
-        final JTextField tname = new JTextField();
-        tname.setToolTipText("Writes task name here");
-        
-        tname.setMaximumSize(new Dimension(f.getSize().height,30));
-        
-        boxName.add(tname);
-        
-        //----- JLabel Info
-        final JLabel linfo = new JLabel("Info:");
-        //----- JTextArea Info        
-        final JTextArea tinfo = new JTextArea();
-        JScrollPane sinfo = new JScrollPane(tinfo);
-        tinfo.setToolTipText("Writes information about task here");
-        boxInfo.add(sinfo);
-        //----- Date
-        final JSpinner dateChooser = new JSpinner(new SpinnerDateModel());
-        dateChooser.setToolTipText("Writes moment when task must run");
-        dateChooser.setMaximumSize(new Dimension(110,30));
-        boxName.add(Box.createRigidArea(new Dimension(10,30)));   
-        final Box b = Box.createHorizontalBox();
-        b.add(dateChooser);
-        boxName.add(b);
-        final JComboBox list = new JComboBox();
-        list.addItem("0.5");
-        list.addItem("1");
-        list.addItem("2");
-        list.addItem("5");
-        list.addItem("6");
-        list.addItem("10");
-        list.addItem("12");
-        list.addItem("15");
-        list.addItem("24");
-        list.setMaximumSize(new Dimension(45,30));
-        final JLabel h = new JLabel("H");
-        list.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent e) { 
-                    Double d = Double.parseDouble((String) list.getSelectedItem())*60;
-                    Long l = d.longValue();
-                     int[] i = table.getSelectedRows();
-                    if (i.length == 0) {return;}
-                    id1 = tableModel.getID(i[0]);
-                    lastSelected = i[0];
-                    TaskInfo t1 =  tasks.get(id1);
-                    dateChooser.setValue(new Date(t1.getDate().getTime()+l*1000*60));
-                }
-            }
-        );
-        boxName.add(list);
-        boxName.add(h);
-        //----- JLabel file
-        final JLabel lFile = new JLabel("");
-        //----- JChoose Execute file
-        final JFileChooser exefile = new JFileChooser();   
-        exefile.setFileFilter(new ExeFilter());
-        JButton bexefile = new JButton("Run program");
-        bexefile.setToolTipText("If you want run some program, you can choose it's program here ");  
-        bexefile.addActionListener(
-        new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                exefile.showOpenDialog(f);
-                if (exefile.getSelectedFile() != null ) {
-                    lFile.setText(exefile.getSelectedFile().getPath());
-                    lFile.setForeground(Color.BLACK);
-                }
-            }
-        });
-        boxFile.add(Box.createRigidArea(new Dimension(10,30)));
-        boxFile.add(bexefile);
-        boxFile.add(lFile);
-        //----- Button Save
-        JButton save = null;
-        switch (command) {
-            case 0: { 
-                save = new JButton("Save");
-                save.setToolTipText("Save the task");
-                f.setTitle("Add new task");
-                break;
-            }
-            case 1: {
-                save = new JButton("Save");
-                save.setToolTipText("Save the task");
-                f.setTitle("Edit task");
-                int[] i = table.getSelectedRows();
-                if (i.length == 0) {return;}
-                id1 = tableModel.getID(i[0]);
-                lastSelected = i[0];
-                TaskInfo t1 =  tableModel.get(i[0]);
-                dateChooser.setValue(t1.getDate());
-                tname.setText(t1.getName());
-                tinfo.setText(t1.getInfo());
-                if (t1.getExec() != null && !t1.getExec().getName().equals(" ")) {
-                    lFile.setText("RunProgram: " + t1.getExec().getPath());
-                    exefile.setSelectedFile(t1.getExec());
-                }
-                break;
-            }
-            case 2: {
-                save = new JButton("Ok");
-                save.setToolTipText("Close dialog");
-                f.setTitle("View task");
-                int[] i = table.getSelectedRows();
-                if (i.length == 0) {return;}
-                id1 = tableModel.getID(i[0]);
-                lastSelected = i[0];
-                TaskInfo t1 =  tableModel.get(i[0]);
-                dateChooser.setValue(t1.getDate());
-                tname.setText(t1.getName());
-                tinfo.setText(t1.getInfo());
-                if (t1.getExec() != null && !t1.getExec().getName().equals(" ")) {
-                    lFile.setText("RunProgram: " + t1.getExec().getPath());
-                    exefile.setSelectedFile(t1.getExec());
-                }
-                break;
-            }
-        }      
-        save.addActionListener(
-        new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                if (command == 2) {
-                    f.dispose();
-                    return;
-                }
-                TaskInfo ts = new TaskInfoImpl();
-                ts.setDate((Date)dateChooser.getValue());
-                ts.setName(tname.getText());
-                ts.setInfo(tinfo.getText());
-                if (exefile.getSelectedFile() != null) {
-                    ts.setExec(exefile.getSelectedFile());
-                } else {
-                    ts.setExec(new File(" "));
-                }
-                if (command == 1) {
-                    try {
-                        controller.editTask(id1,ts);
-                    } catch (DataAccessException e) {
-						log.error(e);
-                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
-                    } catch (BadTaskException e) {
-						log.warn(e);
-                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Warning",JOptionPane.WARNING_MESSAGE);
-                        return;
-                    } 
-                } else {
-                   try {
-                       controller.addTask(ts);
-                    } catch (DataAccessException e) {
-						log.error(e);
-                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
-                    } catch (BadTaskException e) {
-						log.warn(e);
-                        JOptionPane.showMessageDialog(ManagerView.this, e.getMessage(),"Warning",JOptionPane.WARNING_MESSAGE);
-                        return;
-                    } 
-                }
-                f.dispose();
-            }
-        });
-        boxButton.add(save);
-        //----- Button Cancel
-        JButton cancel = null;
-        if (command != 2){
-            cancel = new JButton("Cancel");
-            save.setToolTipText("Close the dialog");
-            cancel.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    f.dispose();
-                }            
-            });
-            boxButton.add(cancel);   
-        }
-        
-        f.setResizable(false);
-        if (command == 2) {
-            tname.setEnabled(false);
-            tinfo.setEnabled(false);
-            dateChooser.setEnabled(false);
-            boxFile.remove(bexefile);
-            boxName.remove(list);
-            boxName.remove(h);
-        }
-        allBoxes.add(boxName);
-        allBoxes.add(Box.createRigidArea(new Dimension(10,10)));
-        allBoxes.add(linfo, BorderLayout.WEST);        
-        allBoxes.add(boxInfo);
-        allBoxes.add(boxFile,BorderLayout.WEST);
-        allBoxes.add(boxButton);
-        f.add(allBoxes);
-        f.setVisible(true);
-    }
-    /**
+   /**
      *    Show task Edit dialog.
      */
-    private void viewEditTask(){
-        viewAddTask(1);
+    private void viewEditTask() {
+       int[] i = table.getSelectedRows();
+       if (i.length == 0) {return;}
+       new TaskWindow(ViewVariable.comEdit,this,controller,tableModel.get(i[0]));
     }
     /**
      *    Show task View dialog.
      */
-    private void viewViewTask(){
-        viewAddTask(2);
-    }
-    /**
-    *    Show execute dialog.
-    */
-    private void viewMassage(final TaskInfo ts) {
-        final Box boxName = Box.createHorizontalBox();
-        Box boxInfo = Box.createHorizontalBox();
-        Box boxFile = Box.createHorizontalBox();
-        Box boxButton = Box.createHorizontalBox();
-        Box allBoxes = Box.createVerticalBox();
-        start = false;
-        int W = Toolkit.getDefaultToolkit().getScreenSize().width;
-        int H = Toolkit.getDefaultToolkit().getScreenSize().height-50;
-        final JSpinner dateChooser = new JSpinner(new SpinnerDateModel());
-        dateChooser.setValue(ts.getDate());
-        dateChooser.setMaximumSize(new Dimension(110,30));
-        final JComboBox list = new JComboBox();
-        list.addItem("0.5");
-        list.addItem("1");
-        list.addItem("2");
-        list.addItem("5");
-        list.addItem("6");
-        list.addItem("10");
-        list.addItem("12");
-        list.addItem("15");
-        list.addItem("24");
-        list.setMaximumSize(new Dimension(45,30));
-        final JLabel h = new JLabel("H");
-        list.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent e) { 
-                    Double d = Double.parseDouble((String) list.getSelectedItem())*60;
-                    Long l = d.longValue();
-                    lastSelected = tableModel.getSelectedRow(ts);
-                    dateChooser.setValue(new Date(new Date().getTime()+l*1000*60));
-                }
-            }
-        );
-        final JDialog msg = new JDialog(this, true);
-        msg.setSize(W/2,H/2);
-        msg.setBounds(W/4,H/4,W/2,H/2);
-                msg.addWindowListener(
-            new WindowAdapter() {
-                public void windowClosing(WindowEvent we) {
-                    lastSelected = tableModel.getSelectedRow(ts);
-                    try {
-                        controller.delTask(ts.getID());
-                    } catch (DataAccessException e) {
-						log.error(e);
-                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
-                    }
-                    msg.dispose();
-                    loadView();
-                }
-            }
-        );
-        //----- JLabel name
-        final JLabel lname = new JLabel("Name:");
-        boxName.add(lname);
-        //----- JTextField
-        final JTextField tname = new JTextField();
-        tname.setMaximumSize(new Dimension(msg.getSize().height,30));        
-        boxName.add(tname);
-        tname.setText(ts.getName());
-        tname.setEnabled(false);
-        //----- JLabel Info
-        final JLabel linfo = new JLabel("Info:");
-        //----- JTextArea Info
-        final JTextArea tinfo = new JTextArea();
-        JScrollPane scrol = new JScrollPane(tinfo);
-        boxInfo.add(scrol);
-        tinfo.setText(ts.getInfo());
-        tinfo.setEnabled(false);
-        boxName.add(Box.createRigidArea(new Dimension(10,30)));    
-        boxName.add(dateChooser);
-        if (ts.getExec() != null && !ts.getExec().getName().equals(" ")) {
-            final JLabel lFile = new JLabel("Run program : " + ts.getExec().getName());
-            boxFile.add(lFile);
-        }
-        JButton ok = new JButton("Ok");  
-        ok.addActionListener(
-        new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                if (dateChooser.isEnabled()) {
-                    ts.setDate((Date)dateChooser.getValue());
-                    lastSelected = tableModel.getSelectedRow(ts);                    
-                    try {
-                        controller.editTask(ts.getID(),ts);
-                    } catch (DataAccessException e) {
-						log.error(e);
-                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
-                    } catch (BadTaskException e) {
-						log.warn(e);
-                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Warning",JOptionPane.WARNING_MESSAGE);
-                        return;
-                    } 
-                    dateChooser.setEnabled(false);
-                    msg.dispose();
-                    return;
-                } 
-                if(!dateChooser.isEnabled()) {
-                    if (!start) {
-                        if (ts.getExec() != null && !ts.getExec().getName().equals(" ")){
-                            Runtime r = Runtime.getRuntime();
-                            try {
-                                r.exec(ts.getExec().getPath());
-                                start = true;
-                            } catch (IOException e) {
-                                log.error("Runtime error");
-                            }
-                        }
-                    }
-                    lastSelected = tableModel.getSelectedRow(ts);    
-                    try {
-                        controller.delTask(ts.getID());
-                    } catch (DataAccessException e) {
-						log.error(e);
-                        JOptionPane.showMessageDialog(msg, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-                msg.dispose();
-                
-            }
-        });
-        if (start) {
-            return;
-        }
-        boxButton.add(ok);
-        //-----Date chooser
-        dateChooser.setEnabled(false);
-        //-----Put off
-        JButton cancel = new JButton("Postpone");
-        cancel.setToolTipText("Put off task to the future time");
-            cancel.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent event) {
-                    dateChooser.setEnabled(true);
-                    boxName.add(list);
-                    boxName.add(h);
-                    msg.setVisible(true);
-                }            
-            });
-        boxButton.add(cancel);
-        if (ViewVariable.autoRun) {
-            if (ts.getExec() != null && !ts.getExec().getName().equals(" ")){
-                Runtime r = Runtime.getRuntime();
-                try {
-                    r.exec(ts.getExec().getPath());
-                    start = true;
-                } catch (IOException e) {
-                    log.error("Runtime error");
-                }
-            }
-        }
-        allBoxes.add(boxName);
-        allBoxes.add(Box.createRigidArea(new Dimension(10,10)));
-        allBoxes.add(linfo, BorderLayout.WEST);        
-        allBoxes.add(boxInfo);
-        allBoxes.add(boxFile,BorderLayout.WEST);
-        allBoxes.add(boxButton);
-        msg.add(allBoxes);
-        msg.setVisible(true);
+    private void viewViewTask() {
+        int[] i = table.getSelectedRows();
+        if (i.length == 0) {return;}
+        new TaskWindow(ViewVariable.comView,this,controller,tableModel.get(i[0]));
     }
     /**
     * Shows about dialog.
@@ -585,7 +249,7 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         sb.append("\n\n    Task Manager"+"\n");
         sb.append("    Version 1.0"+"\n");
         sb.append("    Author: Sergey Ivanchenko"+"\n");
-		sb.append("    This program is free software."+"\n");
+        sb.append("    This program is free software."+"\n");
         JTextArea aboutL = new JTextArea(sb.toString());
         b.add(aboutL);
         aboutL.setBorder(e);
@@ -714,30 +378,8 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
         }
     }
     /**
-    *    Create new thread look in all tasks, 
-    *     and chooses the task for execution. 
-    */
-    public void run() {
-        while (true) {    
-            try {
-                thread.sleep(1000);
-            } catch (InterruptedException e) {}
-                if (tasks != null) {
-                    Collection<TaskInfo> col = tasks.values();
-                    try {
-                        for (TaskInfo t :col) {                    
-                            if (t.getDate().getTime() <= (new Date().getTime()+ViewVariable.offTime*1000*60)) {
-                                viewMassage(t);
-                            }
-                        }
-                    } catch (ConcurrentModificationException e ) {
-                        col = tasks.values();
-                    }
-                }
-        }
-    }
-    /**
-    *    Add controller into view.
+    *  Add controller into view.
+    * @param controller reference on the controller.
     */
     public void setController(ManagerControllerInterface controller) {
         this.controller = controller;
@@ -745,105 +387,54 @@ public class ManagerView extends JFrame implements lab.model.observer.Observable
     /**
      * Update informatio about tasks
      */
-    public void updateTable(){
-         //------- Create JTable
-        if (table == null) {
-            table = new JTable(tableModel);
-            table.addMouseListener(
-                new MouseAdapter() {
-                    public void mouseClicked(MouseEvent e) {
-                        if (e.getClickCount() == 2) {
-                            viewEditTask();
-                        }
-                    }
-                }
-            );
-        table.addKeyListener( 
-            new KeyAdapter() {
-                public void keyPressed(KeyEvent e) {
-                    int com = e.getKeyCode();
-                    if (e.isControlDown()) {
-                        switch (com) {
-                            case KeyEvent.VK_V: {
-                                viewViewTask();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        );
-            JScrollPane scr = new JScrollPane(table);
-            Box b = Box.createVerticalBox();
-            b.add(scr);
-            Box b1 = Box.createHorizontalBox();
-            b.add(b1);
-            total = new JLabel("TotalSize :" + tableModel.total); 
-            total.setMaximumSize(new Dimension(100,30));
-            b1.add(total);
-            today = new JLabel("  Today :" + tableModel.today);
-            today.setMaximumSize(new Dimension(100,30));
-            b1.add(today);
-            tomorrow = new JLabel("  Tomorrow :" + tableModel.tomorrow);
-            tomorrow.setMaximumSize(new Dimension(100,30));
-            b1.add(tomorrow);
-            week = new JLabel("  This week :" + tableModel.week);
-            week.setMaximumSize(new Dimension(100,30));
-            b1.add(week);
-            pane.add(b);
-        } else {
+    public void updateTable() {      
             total.setText("TotalSize :" + tableModel.total);
             today.setText("  Today :" + tableModel.today);
             tomorrow.setText("  Tomorrow :" + tableModel.tomorrow);
             week.setText("  This week :" + tableModel.week);
-            tableModel.fireTableDataChanged();
-        }
-        loadView();
     }
     /**
     * update all task
+    * @param inf reference of the ModelGetInf interface
     */
     public void notifyGetAll(ModelGetInf inf) {
-        mgi = inf;
-        tasks = mgi.getAllTasks();        
-        tableModel = new TableModel(tasks);
+        mgi = inf;     
+        tableModel = new TableModel(mgi.getAllTasks());
+        table.setModel(tableModel);
         updateTable();
     }
     /**
     * Add task into the table.
-	* @param id task id.
+    * @param id task id.
     */
     public void notifyAdd(long id) {
         try {
-            tasks.put(id,mgi.getTask(id));
-            tableModel.addTask(tasks.get(id));
+            tableModel.addTask(mgi.getTask(id));
             updateTable();
         } catch (DataAccessException e) {
-			log.error(e);
+            log.error(e);
             JOptionPane.showMessageDialog(this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
         }
     }
     /**
     * Edit task in the table.
-	* @param id task id.
+    * @param id task id.
     */
     public void notifyEdit(long id) {
         try {
-            tasks.put(id,mgi.getTask(id));
-            tableModel.editTask(lastSelected,tasks.get(id));
+            tableModel.editTask(tableModel.getSelectedRowById(id),mgi.getTask(id));
             updateTable();
         } catch (DataAccessException e) {
-			log.error(e);
+            log.error(e);
             JOptionPane.showMessageDialog(this, e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
         }
     }
     /**
     * Remove task from table.
-	* @param id task id.
+    * @param id task id.
     */
     public void notifyRemove(long id) {
-        tasks.remove(id);        
-        tableModel.removeTask(lastSelected);
+        tableModel.removeTask(tableModel.getSelectedRowById(id));
         updateTable();    
     }
 }//end ManagerView

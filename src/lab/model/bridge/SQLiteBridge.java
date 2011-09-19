@@ -14,6 +14,7 @@ public class SQLiteBridge implements Bridge{
     private SQLiteQueue queue = null;
     /**
     * Chang string character number 39 (') for the adding into the Database.
+    * @param str string for changing.
     */
     private String escapeString(String str) {
         StringBuilder strNew = new StringBuilder();
@@ -52,6 +53,7 @@ public class SQLiteBridge implements Bridge{
     }
     /**
      * Add task
+     * @param task reference on the add task.
      * @throws DataAccessException if we can't have access to Data Base.
      */
     public void addTask(TaskInfo task)throws DataAccessException {
@@ -109,7 +111,7 @@ public class SQLiteBridge implements Bridge{
     }
      /**
      * Remove task.
-     * @param id remove task.
+     * @param id id for the removes task.
      * @throws DataAccessException if we can't have access to Data Base.
      */
     public void removeTask(long id) throws DataAccessException{
@@ -131,6 +133,7 @@ public class SQLiteBridge implements Bridge{
     }
     /**
     * Get task from file.
+    * @param id id for the gets task.
     * @throws DataAccessException if we can't have access to Data Base.
     */
     public TaskInfo getTask(final long id) throws DataAccessException{
@@ -220,6 +223,8 @@ public class SQLiteBridge implements Bridge{
     }
     /**
     * Edit task
+    * @param id id for the edits task.
+    * @param task reference on the add task.
     * @throws DataAccessException if we can't have access to Data Base.
     */
     public void editTask(long id, TaskInfo task) throws DataAccessException {

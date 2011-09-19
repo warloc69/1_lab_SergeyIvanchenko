@@ -9,7 +9,7 @@ import lab.TaskInfo;
  */
 public class TaskInfoImpl implements TaskInfo {
     private long ID;
-    private Date taskDate;
+    private Date taskDate = new Date();
     private File taskDataExec;
     private String taskInfo;
     private String taskName;

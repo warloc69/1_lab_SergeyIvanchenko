@@ -10,7 +10,8 @@ public class ManagerController implements ManagerControllerInterface {
     private MannagerWrite model;
     /**
     * validation task.
-    * throws BadTaskException if task is invalide.
+    * @param task reference on the validation task.
+    * @throws BadTaskException if task is invalide.
     */
     private void taskValidation (TaskInfo task) throws BadTaskException {
         if (task.getDate().before(new Date())) {
@@ -29,12 +30,12 @@ public class ManagerController implements ManagerControllerInterface {
     /**
      * Add task
      * @throws DataAccessException if we can't have access to Data Base.
-     * throws BadTaskException if task is invalide.
+     * @throws BadTaskException if task is invalide.
+     * @param task reference on the add task.
      */
     public void addTask(TaskInfo task) throws BadTaskException, DataAccessException{
         taskValidation(task);
-        model.addTask(task);                
-        
+        model.addTask(task);
     }
      /**
      * Remove task.
@@ -44,11 +45,11 @@ public class ManagerController implements ManagerControllerInterface {
     public void delTask(long id) throws DataAccessException {
         model.removeTask(id);
     }
-
     /**
     * Edit task
     * @throws DataAccessException if we can't have access to Data Base.
-    * throws BadTaskException if task is invalide.
+    * @throws BadTaskException if task is invalide.
+    * @param task reference on the edit task.
     */
     public void editTask(long id, TaskInfo task) throws BadTaskException, DataAccessException{
         taskValidation(task);     
@@ -56,6 +57,7 @@ public class ManagerController implements ManagerControllerInterface {
     }
     /**
     * insert model into controller.
+    * @param model reference of the model.
     */
     public void setModel(MannagerWrite model) {
         this.model = model;

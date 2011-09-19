@@ -12,7 +12,8 @@ public interface ModelGetInf {
     public Hashtable<Long,TaskInfo> getAllTasks();
     /**
     *    Returns task.
-    *     @throws DataAccessException if we can't have access to Data Base.
+    * @param id returning task.
+    * @throws DataAccessException if we can't have access to Data Base.
     */
     public TaskInfo getTask(long id) throws DataAccessException;
 }
